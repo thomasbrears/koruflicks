@@ -1,64 +1,133 @@
-/* Body text - Helia Core Book */
-body {
-  font-family: 'HeliaCoreBook', sans-serif;
+/* Reset and box-sizing */
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Titles and large text - Helia Core Bold */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'HeliaCoreBold', sans-serif;
+html, body, #root {
+  font-family: 'OpenSans', sans-serif;
+  line-height: 1.6;
+  background-color: #000000;
   margin: 0;
-}
-
-/* Bold text within body - Helia Core Medium */
-strong {
-  font-family: 'HeliaCoreMedium', sans-serif;
-  font-weight: 500;
-}
-
-/* Large uppercase text (>36px) - Helia Core Black */
-.uppercase-large {
-  font-family: 'HeliaCoreBlack', sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  font-size: 36px;
-}
-
-
-.App {
-  display: flex;
-  flex-direction: column;
+  padding: 0;
   min-height: 100vh;
-}
-
-.flex-grow {
-  flex-grow: 1;
-}
-
-.assigned-inductions table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+  color: #fff; 
 }
 
-.assigned-inductions th, .assigned-inductions td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
+/* Titles and large text - Chewy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Chewy', cursive; 
+  line-height: 1.2;
 }
 
-.assigned-inductions th {
-  background-color: #f2f2f2;
-  font-weight: bold;
+/* Additional global styles */
+p {
+  font-family: 'OpenSans', sans-serif;
+  margin-bottom: 1rem;
 }
 
-.relative { position: relative; }
-.absolute { position: absolute; }
-.right-2 { right: 0.5rem; }
-.top-1\/2 { top: 50%; }
-.transform { transform: translateY(-50%); }
-.-translate-y-1\/2 { transform: translateY(-50%); }
-.hover\:text-gray-200:hover { color: #edf2f7; }
+a {
+  font-family: 'OpenSans', sans-serif;
+  text-decoration: none;
+  color: inherit;
+}
 
+button {
+  font-family: 'OpenSans', sans-serif;
+  cursor: pointer;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+/* Custom styles for Ant Design pagination on dark theme */
+
+/* Override Ant Design's pagination styles to match the dark theme */
+.custom-pagination .ant-pagination-item {
+  background-color: #1f1f1f;
+  border-color: #333;
+}
+
+.custom-pagination .ant-pagination-item a {
+  color: #fff;
+}
+
+.custom-pagination .ant-pagination-item-active {
+  background-color: var(--color-LGreen, #328B31);
+  border-color: var(--color-LGreen, #328B31);
+}
+
+.custom-pagination .ant-pagination-item-active a {
+  color: white;
+}
+
+.custom-pagination .ant-pagination-item:hover {
+  border-color: var(--color-LGreen, #328B31);
+}
+
+.custom-pagination .ant-pagination-item:hover a {
+  color: var(--color-LGreen, #328B31);
+}
+
+.custom-pagination .ant-pagination-prev .ant-pagination-item-link,
+.custom-pagination .ant-pagination-next .ant-pagination-item-link {
+  color: #fff;
+  background-color: #1f1f1f;
+  border-color: #333;
+}
+
+.custom-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
+.custom-pagination .ant-pagination-next:hover .ant-pagination-item-link {
+  color: var(--color-LGreen, #328B31);
+  border-color: var(--color-LGreen, #328B31);
+}
+
+.custom-pagination .ant-pagination-disabled .ant-pagination-item-link {
+  color: #666;
+  background-color: #1f1f1f;
+  border-color: #333;
+}
+
+/* Make sure the hover doesn't apply to disabled buttons */
+.custom-pagination .ant-pagination-disabled:hover .ant-pagination-item-link {
+  color: #666;
+  border-color: #333;
+}
+
+/* Fix for Ant Design skeleton loaders in dark theme */
+.ant-skeleton-image {
+  background-color: #222 !important;
+}
+
+.ant-skeleton-image svg {
+  fill: #333 !important;
+}
+
+
+.ant-notification-notice {
+  background-color: #1f1f1f !important;
+  border: 1px solid #303030 !important;
+}
+.ant-notification-notice-message {
+  color: #ffffff !important;
+}
+.ant-notification-notice-description {
+  color: #b0b0b0 !important;
+}
+
+.ant-message-notice-content {
+  background-color: #1f1f1f !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.48), 0 6px 16px 0 rgba(0, 0, 0, 0.32) !important;
+  border: 1px solid #303030 !important;
+}
+.ant-message-custom-content {
+  color: #ffffff !important;
+}
+.ant-message-success .anticon {
+  color: #3db63b !important;
+}
+.ant-message-info .anticon {
+  color: #1890ff !important;
+}

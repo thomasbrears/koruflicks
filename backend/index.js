@@ -1,15 +1,13 @@
 import express from "express";
 import cors from "cors";
-import { authMiddleware } from "./middleware/authMiddleware.js";
-import userRoutes from "./routes/userRoutes.js";
-import inductionRoutes from "./routes/inductionRoutes.js";
+import movieRoutes from "./routes/movieRoutes.js"; // Import movie routes
 
 const app = express();
 
 // dynamic cors options
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? 'https://dev-aut-events-induction.vercel.app' 
+    ? 'https://koruflicks.vercel.app' 
     : true,  // Allow all origins in development
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
   credentials: true
@@ -20,14 +18,8 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-// Authentication middleware
-app.use(authMiddleware);
-
-// User Routes
-app.use("/api/users", userRoutes);
-
-// Induction Routes
-app.use("/api/inductions", inductionRoutes);
+// Movie Routes
+app.use("/api/movies", movieRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

@@ -1,0 +1,74 @@
+/* Custom styling for radio buttons */
+.custom-radio-group .ant-radio-button-wrapper {
+    background-color: #1a1a1a;
+    border-color: #328B31;
+    color: white;
+    transition: all 0.3s ease;
+  }
+  
+  .custom-radio-group .ant-radio-button-wrapper:hover {
+    background-color: rgba(50, 139, 49, 0.7);
+    color: white;
+  }
+  
+  .custom-radio-group .ant-radio-button-wrapper-checked {
+    background-color: #328B31 !important;
+    border-color: #328B31 !important;
+    color: white !important;
+    box-shadow: -1px 0 0 0 #328B31;
+  }
+  
+  .custom-radio-group .ant-radio-button-wrapper-checked::before {
+    background-color: #328B31 !important;
+  }
+  
+  /* Category selector scrollbar styling */
+  .category-selector-container {
+    scrollbar-width: thin;
+    scrollbar-color: #328B31 #1a1a1a;
+  }
+  
+  .category-selector-container::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .category-selector-container::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+  }
+  
+  .category-selector-container::-webkit-scrollbar-thumb {
+    background-color: #328B31;
+    border-radius: 4px;
+  }
+  
+  /* Custom input styling */
+  .ant-input-affix-wrapper:focus,
+  .ant-input-affix-wrapper-focused {
+    border-color: #328B31 !important;
+    box-shadow: 0 0 0 2px rgba(50, 139, 49, 0.2) !important;
+  }
+  
+  .ant-input-affix-wrapper:hover {
+    border-color: #328B31 !important;
+  }
+  
+  /* Custom pagination styling */
+  .custom-pagination .ant-pagination-item-active {
+    border-color: #328B31;
+    background-color: #328B31;
+  }
+  
+  .custom-pagination .ant-pagination-item:hover {
+    border-color: #328B31;
+  }
+  
+  .custom-pagination .ant-pagination-item-active a {
+    color: white !important;
+  }
+  
+  .custom-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
+  .custom-pagination .ant-pagination-next:hover .ant-pagination-item-link {
+    color: #328B31;
+    border-color: #328B31;
+  }

@@ -1,7 +1,12 @@
-import admin from "firebase-admin";
-
-// Middleware to check authentication
 export const authMiddleware = async (req, res, next) => {
+  // List of public routes that do not require authentication
+  const publicRoutes = ['/api/movies/popular'];
+
+  // If the route is public, skip authentication
+  if (publicRoutes.includes(req.originalUrl)) {
+    return next();
+  }
+
   const { authtoken } = req.headers;
 
   if (authtoken) {

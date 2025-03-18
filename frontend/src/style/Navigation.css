@@ -1,0 +1,300 @@
+/* Custom CSS for navigation components */
+
+/* Theme colors */
+:root {
+    --dark-green: #328B31;
+    --light-green: #3db636;
+  }
+  
+  /* Sidebar styles */
+  .ant-menu.ant-menu-dark,
+  .ant-layout-sider-dark {
+    background: #000000 !important;
+  }
+  
+  /* Selected menu items */
+  .ant-menu-dark.ant-menu-dark:not(.ant-menu-horizontal) .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Hover effects */
+  .ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected),
+  .ant-menu-dark .ant-menu-submenu-title:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected) {
+    color: var(--light-green) !important;
+  }
+  
+  /* Drawer content */
+  .side-menu-drawer .ant-drawer-content {
+    background-color: #000000 !important;
+  }
+  
+  /* Fix drawer body padding */
+  .side-menu-drawer .ant-drawer-body {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+  }
+  
+  /* Submenu items - Black background */
+  .ant-menu-dark .ant-menu-sub {
+    background: #000000 !important;
+  }
+  
+  /* Submenu popup - Black background */
+  .ant-menu-dark.ant-menu-submenu-popup {
+    background: transparent !important;
+  }
+  .ant-menu-dark.ant-menu-submenu-popup > .ant-menu {
+    background: #000000 !important;
+  }
+  
+  /* Submenu selected background */
+  .ant-menu-dark .ant-menu-sub .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Fix mobile issues in Safari */
+  @supports (-webkit-touch-callout: none) {
+    .ant-drawer-content-wrapper {
+      height: -webkit-fill-available !important;
+    }
+  }
+  
+  /* Divider color */
+  .ant-menu-dark .ant-menu-item-divider {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* Account section styles */
+  .account-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 0;
+  }
+  
+  /* Make top navbar properly fixed on iOS */
+  .fixed-top-navbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+  
+  /* Style for collapsed menu hover tooltips */
+  .ant-tooltip-inner {
+    background-color: #000000 !important;
+    border: 1px solid var(--dark-green) !important;
+  }
+  
+  .ant-tooltip-arrow-content {
+    background-color: #000000 !important;
+  }
+  
+  /* Smooth transitions for expand/collapse */
+  .ant-layout-sider {
+    transition: all 0.2s !important;
+  }
+  
+  .ant-menu-inline-collapsed {
+    transition: all 0.2s !important;
+  }/* Custom CSS for navigation components */
+  
+  /* Theme colors */
+  :root {
+    --dark-green: #328B31;
+    --light-green: #3db636;
+  }
+  
+  /* Sidebar styles */
+  .ant-menu.ant-menu-dark,
+  .ant-layout-sider-dark {
+    background: #000000 !important;
+  }
+  
+  /* Selected menu items */
+  .ant-menu-dark.ant-menu-dark:not(.ant-menu-horizontal) .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Hover effects */
+  .ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected),
+  .ant-menu-dark .ant-menu-submenu-title:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected) {
+    color: var(--light-green) !important;
+  }
+  
+  /* Drawer content */
+  .side-menu-drawer .ant-drawer-content {
+    background-color: #000000 !important;
+  }
+  
+  /* Fix drawer body padding */
+  .side-menu-drawer .ant-drawer-body {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+  }
+  
+  /* Submenu items - Black background */
+  .ant-menu-dark .ant-menu-sub {
+    background: #000000 !important;
+  }
+  
+  /* Submenu popup - Black background */
+  .ant-menu-dark.ant-menu-submenu-popup {
+    background: transparent !important;
+  }
+  .ant-menu-dark.ant-menu-submenu-popup > .ant-menu {
+    background: #000000 !important;
+  }
+  
+  /* Submenu selected background */
+  .ant-menu-dark .ant-menu-sub .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Fix mobile issues in Safari */
+  @supports (-webkit-touch-callout: none) {
+    .ant-drawer-content-wrapper {
+      height: -webkit-fill-available !important;
+    }
+  }
+  
+  /* Divider color */
+  .ant-menu-dark .ant-menu-item-divider {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* Account section styles */
+  .account-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 0;
+  }
+  
+  /* Make top navbar properly fixed on iOS */
+  .fixed-top-navbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+  
+  /* Style for collapsed menu hover tooltips */
+  .ant-tooltip-inner {
+    background-color: #000000 !important;
+    border: 1px solid var(--dark-green) !important;
+  }
+  
+  .ant-tooltip-arrow-content {
+    background-color: #000000 !important;
+  }/* Custom CSS for navigation components */
+  
+  /* Theme colors */
+  :root {
+    --dark-green: #328B31;
+    --light-green: #3db636;
+  }
+  
+  /* Sidebar styles */
+  .ant-menu.ant-menu-dark,
+  .ant-layout-sider-dark {
+    background: #000000 !important;
+  }
+  
+  /* Selected menu items */
+  .ant-menu-dark.ant-menu-dark:not(.ant-menu-horizontal) .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Hover effects */
+  .ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected),
+  .ant-menu-dark .ant-menu-submenu-title:hover:not(.ant-menu-item-selected):not(.ant-menu-submenu-selected) {
+    color: var(--light-green) !important;
+  }
+  
+  /* Drawer content */
+  .side-menu-drawer .ant-drawer-content {
+    background-color: #000000 !important;
+  }
+  
+  /* Fix drawer body padding */
+  .side-menu-drawer .ant-drawer-body {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+  }
+  
+  /* Submenu items - Change from blue to black */
+  .ant-menu-dark .ant-menu-sub {
+    background: #000000 !important;
+  }
+  
+  /* Submenu selected background */
+  .ant-menu-dark .ant-menu-sub .ant-menu-item-selected {
+    background-color: var(--dark-green) !important;
+  }
+  
+  /* Fix mobile issues in Safari */
+  @supports (-webkit-touch-callout: none) {
+    .ant-drawer-content-wrapper {
+      height: -webkit-fill-available !important;
+    }
+  }
+  
+  /* Divider color */
+  .ant-menu-dark .ant-menu-item-divider {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* Icons in tablet mode */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .ant-menu-inline-collapsed .ant-menu-item {
+      padding: 0 calc(50% - 16px) !important;
+    }
+    
+    /* Center tablet mode icons */
+    .tablet-menu-item {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 12px 0 !important;
+      text-align: center !important;
+    }
+    
+    .tablet-menu-item .anticon {
+      margin-right: 0 !important;
+      font-size: 20px !important;
+    }
+    
+    .tablet-menu-label {
+      margin-top: 4px !important;
+      font-size: 12px !important;
+      line-height: 1.2 !important;
+    }
+  }
+  
+  /* Make top navbar properly fixed on iOS */
+  .fixed-top-navbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+  
+  /* Position account section at the bottom */
+  .account-section {
+    margin-top: auto !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px;
+  }
+
+
+  .side-menu-search input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+  
+  .ant-input-affix-wrapper .ant-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }

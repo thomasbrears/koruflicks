@@ -1,45 +1,62 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async'; // HelmetProvider to dynamicly set page head for titles, seo etc
-import { auth } from '../firebaseConfig.js';
-import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { Link, useNavigate } from 'react-router-dom';
+import { Form, Input, Button, notification } from 'antd';
+import { MailOutlined } from '@ant-design/icons';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { toast } from 'react-toastify'; // Toastify success/error/info messages
-import Loading from '../components/Loading'; // Loading animation
-import '../style/Auth.css';
+import { auth } from '../firebaseConfig.js';
+import AuthLayout from '../layouts/AuthLayout';
 
 function ResetPasswordPage() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const navigate = useNavigate();
+    const [form] = Form.useForm();
 
     // Function to handle password reset email sending
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleResetPassword = async (values) => {
+        const { email } = values;
+        
         try {
             setLoading(true);
-            setLoadingMessage(`Sending password reset email to ${email}...`);	
+            setLoadingMessage(`Sending password reset email to ${email}...`);
 
             await sendPasswordResetEmail(auth, email);
-            toast.success('If an account exists with that email, we have sent a password reset email.', { position: 'top-center', autoClose: 7000 });
-            // Delay navigation to login page for 2 seconds to display success message
+            
+            notification.success({
+                message: 'Success',
+                description: 'If an account exists with that email, we have sent a password reset email.',
+                duration: 7,
+            });
+            
+            // Delay navigation to login page for 1 second to display success message
             setTimeout(() => {
                 navigate("/auth/signin");
-            }, 1000); // 1 second
+            }, 1000);
         } catch (error) {
-           // Handle Firebase Auth specific error messages
+            console.error("Error sending reset email:", error);
+            // Handle Firebase Auth specific error messages
             switch (error.code) {
                 case 'auth/invalid-email':
-                    toast.error('Invalid email format. Please check and try again.');
+                    notification.error({
+                        message: 'Error',
+                        description: 'Invalid email format. Please check and try again.',
+                    });
                     break;
                 case 'auth/network-request-failed':
-                    toast.error('Network error. Please check your connection and try again.');
+                    notification.error({
+                        message: 'Error',
+                        description: 'Network error. Please check your connection and try again.',
+                    });
                     break;
                 default:
-                    toast.error('Error sending reset email. Please try again.');
+                    notification.error({
+                        message: 'Error',
+                        description: 'Error sending reset email. Please try again.',
+                    });
                     break;
             }
-            console.error("Error sending reset email:", error);
         } finally {
             setLoading(false);
         }
@@ -47,44 +64,63 @@ function ResetPasswordPage() {
 
     return (
         <>
-            <Helmet><title>Reset Password | AUT Events Induction Portal</title></Helmet>
-            <div 
-                className="min-h-screen flex items-center justify-center bg-cover bg-center px-4" 
-                style={{ backgroundImage: 'url(/images/WG_OUTSIDE_AUT.webp)' }} // Background image
+            <Helmet>
+                <title>Reset Password | Koru Flicks</title>
+            </Helmet>
+            <AuthLayout 
+                heading="Reset Password" 
+                loading={loading} 
+                loadingMessage={loadingMessage}
             >
-                {loading && <Loading message={loadingMessage} />}
-                <div className="w-full max-w-sm p-8 bg-white shadow-lg rounded-lg">
-                    <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Reset Password</h1>
-                    <p className="text-sm text-gray-600 mb-4 text-center">
-                        Please enter your email, and we will send you a link to reset your password.
-                    </p>
+                <p className="text-gray-300 mb-6 text-center">
+                    Please enter your email, and we will send you a link to reset your password.
+                </p>
+                
+                <Form
+                    form={form}
+                    name="resetPassword"
+                    onFinish={handleResetPassword}
+                    layout="vertical"
+                    className="space-y-4"
+                >
+                    <Form.Item
+                        name="email"
+                        label={<span className="text-gray-300">Email Address</span>}
+                        rules={[
+                            { 
+                                required: true, 
+                                message: 'Please enter your email!',
+                                type: 'email'
+                            }
+                        ]}
+                    >
+                        <Input 
+                            prefix={<MailOutlined className="site-form-item-icon" />}
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="px-4 py-2 h-11 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                            style={{ backgroundColor: '#1f2937', color: 'white' }}
+                        />
+                    </Form.Item>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                            <input
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="Enter your email"
-                            />
-                        </div>
+                    <Form.Item>
+                        <Button 
+                            type="primary" 
+                            htmlType="submit"
+                            className="w-full bg-LGreen text-black font-semibold py-3 h-11 px-4 rounded-lg hover:bg-DGreen hover:text-white transition-colors duration-300 text-center"
+                        >Reset Password
+                        </Button>
+                    </Form.Item>
+                </Form>
 
-                        <button type="submit" className="w-full bg-black text-white py-2 rounded-sm hover:bg-gray-900 text-center">
-                            Reset Password
-                        </button>
-                    </form>
-
-                    <div className="text-center mt-4">
-                        <p className="text-sm text-gray-600">
-                            Remembered your password?{' '}
-                            <Link to="/signin" className="font-bold text-black hover:underline">Sign in</Link>
-                        </p>
-                    </div>
-                </div>
-            </div>
+                <p className="mt-8 text-sm text-center text-gray-400">
+                    Remembered your password?{' '}
+                    <Link to="/auth/signin" className="text-LGreen hover:text-white transition-colors duration-200"
+                    > Sign in here
+                    </Link>
+                </p>
+            </AuthLayout>
         </>
     );
 }
