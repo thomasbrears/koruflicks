@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Pages
 import HomePage from './pages/HomePage';
-import ContactPage from './pages/ContactPage';
+import SupportPage from './pages/SupportPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import MagicLinkSigninPage from './pages/MagicLinkSigninPage';
@@ -20,6 +20,9 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import CategoryResultsPage from './pages/CategoryResultsPage';
 import DetailsPage from './pages/DetailsPage';
 import CategoriesPage from './components/CategoriesSection';
+import AccountPage from './pages/AccountPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 // Auth hook and components
 import useAuth from './hooks/useAuth';
@@ -130,20 +133,37 @@ const App = () => {
             <Route path="/*" element={
               <LayoutWrapper>
                 <Routes>
-                  {/* Link redirects */}
-                  <Route path="/account" element={<Navigate to="/account/manage" />} />
                   
                   {/* Public routes */}
                   <Route path="/" element={<HomePage />} />
-                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/support" element={<SupportPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                   <Route path="/search" element={<SearchResultsPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/:mediaType/:id" element={<DetailsPage />} />
                   <Route path="/categories" element={<CategoriesPage />} />
                   <Route path="/categories/:categoryName" element={<CategoryResultsPage />} />
 
                   {/* Restricted to logged-in users */}
-                  <Route path="/account/manage" element={<PrivateRoute component={ManageAccount} />} />
+                  <Route path="/account" element={<PrivateRoute component={AccountPage} />} />
+                  {/* Protected account routes 
+                  <Route 
+                    path="/account/profile" 
+                    element={
+                      <PrivateRoute>
+                        <ProfilePage />
+                      </PrivateRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/account/edit" 
+                    element={
+                      <PrivateRoute>
+                        <EditAccountPage />
+                      </PrivateRoute>
+                    } 
+                  />*/}
                 </Routes>
               </LayoutWrapper>
             } />

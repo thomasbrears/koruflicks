@@ -8,7 +8,8 @@ import {
   Typography,
   Skeleton,
   Button,
-  Input
+  Input,
+  List
 } from 'antd';
 import {
   HomeOutlined,
@@ -206,12 +207,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
         {
           key: 'profile',
           icon: <UserOutlined />,
-          label: <Link to="/account/profile" onClick={isMobile ? onClose : undefined}>Profile</Link>,
-        },
-        {
-          key: 'settings',
-          icon: <SettingOutlined />,
-          label: <Link to="/account/settings" onClick={isMobile ? onClose : undefined}>Settings</Link>,
+          label: <Link to="/account" onClick={isMobile ? onClose : undefined}>Profile</Link>,
         },
         {
           key: 'signout',
@@ -358,7 +354,8 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
           display: 'flex', 
           flexDirection: 'column', 
           height: '100%',
-          background: '#000000' 
+          background: '#000000',
+          overflow: 'auto' // Make it scrollable
         }}
         headerStyle={{ display: 'none' }}
         style={{ zIndex: 1000 }}
@@ -381,7 +378,139 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
           </Link>
         </div>
         
-        {sidebarContent}
+        {/* Main navigation menu */}
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={getSelectedKeys()}
+          style={{ 
+            borderRight: 0,
+            background: '#000000',
+            marginBottom: '20px' // Add some space before the account section
+          }}
+          items={menuItems}
+          inlineCollapsed={false}
+        />
+        
+        {/* Separate account section - not using Ant Design Menu for this */}
+        <div style={{ 
+          padding: '10px 0', 
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: '#000000'
+        }}>
+          {loading ? (
+            <div style={{ padding: '0 16px' }}>
+              <Skeleton.Avatar active size="small" style={{ marginRight: 8 }} />
+              <Skeleton.Input active size="small" style={{ width: 120 }} />
+            </div>
+          ) : user ? (
+            // User is logged in - show account options as List items
+            <>
+              <div style={{ 
+                padding: '10px 16px', 
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Avatar 
+                  size="small" 
+                  src={user?.photoURL} 
+                  icon={!user?.photoURL && <UserOutlined />}
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={{ color: 'white' }}>
+                  Kia ora, {user?.displayName ? user?.displayName.split(" ")[0] : "User"}
+                </Text>
+              </div>
+              <List
+                size="small"
+                dataSource={[
+                  {
+                    title: 'Profile',
+                    icon: <UserOutlined />,
+                    path: '/account/profile'
+                  },
+                  {
+                    title: 'Edit Account',
+                    icon: <SettingOutlined />,
+                    path: '/account/edit'
+                  },
+                  {
+                    title: 'Sign Out',
+                    icon: <LogoutOutlined />,
+                    action: () => {
+                      signOut();
+                      onClose();
+                    }
+                  }
+                ]}
+                renderItem={(item) => (
+                  <List.Item 
+                    style={{ 
+                      borderBottom: 'none', 
+                      padding: '10px 16px 10px 32px' 
+                    }}
+                  >
+                    {item.path ? (
+                      <Link 
+                        to={item.path}
+                        onClick={onClose}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          color: 'rgba(255,255,255,0.85)',
+                          width: '100%'
+                        }}
+                      >
+                        {item.icon}
+                        <span style={{ marginLeft: 10 }}>{item.title}</span>
+                      </Link>
+                    ) : (
+                      <div 
+                        onClick={item.action}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          color: 'rgba(255,255,255,0.65)',
+                          width: '100%',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {item.icon}
+                        <span style={{ marginLeft: 10 }}>{item.title}</span>
+                      </div>
+                    )}
+                  </List.Item>
+                )}
+                style={{ 
+                  backgroundColor: '#000000',
+                  color: 'white' 
+                }}
+              />
+            </>
+          ) : (
+            // User is not logged in - show sign in button
+            <div style={{ padding: '10px 16px' }}>
+              <Button
+                type="primary"
+                icon={<UserOutlined />}
+                style={{ 
+                  background: 'var(--dark-green)',
+                  borderColor: 'var(--dark-green)',
+                  width: '100%'
+                }}
+              >
+                <Link 
+                  to="/auth/signin" 
+                  onClick={onClose}
+                  style={{ color: 'white' }}
+                >
+                  Sign In
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
       </Drawer>
     );
   }
