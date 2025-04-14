@@ -1,4 +1,3 @@
-// src/components/account/NameSettings.jsx
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Alert, message } from 'antd';
 import { UserOutlined, SaveOutlined } from '@ant-design/icons';

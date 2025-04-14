@@ -3,9 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Form, Input, Button, notification } from 'antd';
 import { MailOutlined } from '@ant-design/icons';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../firebaseConfig.js';
 import AuthLayout from '../layouts/AuthLayout';
+import { resetPassword } from '../services/authService';
 
 function ResetPasswordPage() {
     const [email, setEmail] = useState('');
@@ -22,10 +21,11 @@ function ResetPasswordPage() {
             setLoading(true);
             setLoadingMessage(`Sending password reset email to ${email}...`);
 
-            await sendPasswordResetEmail(auth, email);
+            // Use auth service to reset password
+            await resetPassword(email);
             
             notification.success({
-                message: 'Success',
+                message: 'Email Sent',
                 description: 'If an account exists with that email, we have sent a password reset email.',
                 duration: 7,
             });

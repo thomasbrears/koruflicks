@@ -1,0 +1,91 @@
+/* Ticket card hover effect and transition */
+.ticket-card {
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #1f1f1f;
+  }
+  
+  .ticket-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border-color: #328B31;
+  }
+  
+  /* Ticket status tag styling */
+  .ticket-status {
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Ticket details text styling */
+  .ticket-subject {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 90%;
+  }
+  
+  .ticket-meta {
+    color: #b0b0b0;
+    font-size: 13px;
+  }
+  
+  .ticket-number {
+    font-family: 'OpenSans', sans-serif;
+    color: #9CA3AF;
+  }
+  
+  .ticket-date {
+    color: #9CA3AF;
+  }
+  
+  /* No tickets placeholder styling */
+  .no-tickets-container {
+    padding: 40px 20px;
+    text-align: center;
+  }
+  
+  .no-tickets-container .ant-empty-description {
+    color: #9CA3AF !important;
+  }
+  
+  /* Ticket list container with better spacing */
+  .tickets-container {
+    margin-bottom: 2rem;
+  }
+  
+  .tickets-container .ant-list-item {
+    padding: 8px 0;
+    margin-bottom: 8px;
+  }
+  
+  /* Enhance section header */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #333;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    color: white;
+  }
+  
+  /* Fix for skeleton loaders */
+  .ticket-skeleton {
+    background-color: #1f1f1f !important;
+  }
+  
+  .ticket-skeleton .ant-skeleton-title,
+  .ticket-skeleton .ant-skeleton-paragraph > li {
+    background-color: #333 !important;
+  }

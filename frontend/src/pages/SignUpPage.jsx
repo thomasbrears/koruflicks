@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
 import { Link, useNavigate } from 'react-router-dom';
 import { notification, Input, Button, Divider, Form, Checkbox } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, GoogleOutlined } from '@ant-design/icons';
-import { doc, setDoc } from 'firebase/firestore';
 import AuthLayout from '../layouts/AuthLayout';
+import { signUpWithEmail, signInWithGoogle } from '../services/authService';
 
 function SignUpPage() {
     const [loading, setLoading] = useState(false);
@@ -63,21 +61,9 @@ function SignUpPage() {
             setLoading(true);
             setLoadingMessage(`Creating account for ${email}...`);
     
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-    
-            // Save user information in Firestore
-            await setDoc(doc(db, 'users', user.uid), {
-                firstName,
-                lastName,
-                email,
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString()
-            });
-    
-            // Send email verification
-            await sendEmailVerification(user);
-    
+            // Use the auth service to sign up
+            await signUpWithEmail(email, password, firstName, lastName);
+            
             notification.success({
                 message: 'Success',
                 description: 'Account created successfully! Please verify your email.',
@@ -119,28 +105,13 @@ function SignUpPage() {
     
     // Handle sign-up with Google
     const handleGoogleSignUp = async () => {
-        const provider = new GoogleAuthProvider();
-    
         try {
             setLoading(true);
             setLoadingMessage('Signing up with Google...');
     
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            const { displayName, email } = user;
-    
-            // Split the displayName (if available) into first and last names
-            const [firstName, lastName] = displayName ? displayName.split(' ') : ['Unknown', 'User'];
-    
-            // Save user information in Firestore
-            await setDoc(doc(db, 'users', user.uid), {
-                firstName,
-                lastName,
-                email,
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString()
-            });
-    
+            // Use the auth service to sign in with Google
+            await signInWithGoogle();
+            
             notification.success({
                 message: 'Success',
                 description: 'Account created successfully with Google!',

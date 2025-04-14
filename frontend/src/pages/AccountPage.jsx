@@ -1,4 +1,3 @@
-// src/pages/AccountPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +6,7 @@ import {
   Avatar, 
   Tag, 
   Skeleton,
-  message 
+  notification
 } from 'antd';
 import { 
   UserOutlined, 
@@ -18,7 +17,8 @@ import {
   doc, 
   getDoc, 
   setDoc,
-  updateDoc
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { 
   db, 
@@ -70,7 +70,20 @@ const AccountPage = () => {
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            setProfileData(userDoc.data());
+            const userData = userDoc.data();
+            
+            // Check if the user has a roles array, if not, add it
+            if (!userData.roles || !Array.isArray(userData.roles)) {
+              await updateDoc(userDocRef, {
+                roles: ['user'],
+                updatedAt: serverTimestamp()
+              });
+              
+              // Update the local user data with the roles
+              userData.roles = ['user'];
+            }
+            
+            setProfileData(userData);
           } else {
             // If user document doesn't exist (edge case), create it
             const userData = {
@@ -78,8 +91,9 @@ const AccountPage = () => {
               lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
               email: currentUser.email,
               phone: '',
-              createdAt: new Date().toISOString(),
-              lastLogin: new Date().toISOString()
+              roles: ['user'],
+              createdAt: serverTimestamp(),
+              lastLogin: serverTimestamp()
             };
             
             await setDoc(userDocRef, userData);
@@ -87,7 +101,10 @@ const AccountPage = () => {
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
-          message.error("Failed to load profile data");
+          notification.error({
+            message: 'Error',
+            description: 'Failed to load profile data'
+          });
         } finally {
           setLoading(false);
         }
@@ -124,7 +141,8 @@ const AccountPage = () => {
             // Email has been verified and updated
             const userDocRef = doc(db, 'users', freshUser.uid);
             await updateDoc(userDocRef, {
-              email: freshUser.email
+              email: freshUser.email,
+              updatedAt: serverTimestamp()
             });
             
             setProfileData(prevData => ({
@@ -133,7 +151,10 @@ const AccountPage = () => {
             }));
             
             localStorage.removeItem('pendingEmailChange');
-            message.success('Your email has been successfully updated and verified.');
+            notification.success({
+              message: 'Success',
+              description: 'Your email has been successfully updated and verified.'
+            });
           }
         } catch (error) {
           console.error("Error checking pending email change:", error);
@@ -210,8 +231,21 @@ const AccountPage = () => {
                     
                     {profileData?.createdAt && (
                       <p className="text-gray-500 text-sm block mt-2">
-                        Member since {new Date(profileData.createdAt).toLocaleDateString()}
+                        Member since {new Date(profileData.createdAt.seconds ? 
+                          profileData.createdAt.toDate() : 
+                          profileData.createdAt).toLocaleDateString()}
                       </p>
+                    )}
+                    
+                    {/* Display user roles */}
+                    {profileData?.roles && (
+                      <div className="mt-2">
+                        {profileData.roles.map(role => (
+                          <Tag key={role} color={role === 'admin' ? 'gold' : role === 'premium' ? 'green' : 'default'} className="mr-1">
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </Tag>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

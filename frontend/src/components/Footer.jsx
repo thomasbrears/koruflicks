@@ -44,9 +44,9 @@ const Footer = () => {
             <h3 className="text-lg font-medium mb-2 text-white">Account</h3>
             {IS_AUTHENTICATED ? (
               <>
-                <Link to="/account/profile" className="text-gray-400 hover:text-LGreen transition-colors">My Profile</Link>
-                <Link to="/account/watchlist" className="text-gray-400 hover:text-LGreen transition-colors">My Watchlist</Link>
-                <Link to="/account/settings" className="text-gray-400 hover:text-LGreen transition-colors">Settings</Link>
+                <Link to="/account" className="text-gray-400 hover:text-LGreen transition-colors">My Profile</Link>
+                <Link to="/account" className="text-gray-400 hover:text-LGreen transition-colors">My Watchlist</Link>
+                <Link to="/account" className="text-gray-400 hover:text-LGreen transition-colors">Settings</Link>
                 <button 
                   onClick={signOut} 
                   className="text-gray-400 hover:text-LGreen transition-colors font-medium text-left"
