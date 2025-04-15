@@ -55,6 +55,33 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
     }
   }, [searchActive]);
 
+  // Get the user's display name based on available data
+  const getUserDisplayName = (user) => {
+    // First check for fullName
+    if (user?.fullName) {
+      return user.fullName.split(" ")[0]; // Just get the first name
+    }
+    
+    // Then check for firstName from Firestore data
+    if (user?.firstName) {
+      return user.firstName;
+    }
+    
+    // Then check for the standard Firebase Auth displayName (from Google login)
+    if (user?.displayName) {
+      return user.displayName.split(" ")[0];
+    }
+    
+    // Finally, if email is available, extract the part before @
+    if (user?.email) {
+      const emailName = user.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
+    
+    return "User"; // Default fallback if others fail
+  };
+
   const popularCategories = [
     { key: 'action', label: 'Action' },
     { key: 'comedy', label: 'Comedy' },
@@ -202,7 +229,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
           icon={!user?.photoURL && <UserOutlined />}
         />
       ),
-      label: `Kia ora, ${user?.displayName ? user?.displayName.split(" ")[0] : "User"}`,
+      label: `Kia ora, ${getUserDisplayName(user)}`,
       children: [
         {
           key: 'profile',
@@ -419,7 +446,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
                   style={{ marginRight: 10 }}
                 />
                 <Text style={{ color: 'white' }}>
-                  Kia ora, {user?.displayName ? user?.displayName.split(" ")[0] : "User"}
+                  Kia ora, ${getUserDisplayName(user)}
                 </Text>
               </div>
               <List
