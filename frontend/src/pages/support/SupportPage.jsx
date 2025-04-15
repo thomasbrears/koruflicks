@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Typography, 
   Button, 
   Card, 
   Skeleton, 
@@ -23,14 +22,14 @@ import useAuth from '../../hooks/useAuth';
 import { fetchUserTickets } from '../../api/ContactAPI';
 import '../../style/Support.css';
 
-const { Title, Text, Paragraph } = Typography;
-
 const SupportPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [userTickets, setUserTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [ticketsError, setTicketsError] = useState(null);
   const [fetchAttempted, setFetchAttempted] = useState(false);
+  
+  const navigate = useNavigate();
   
   // Fetch user tickets if user is logged in
   useEffect(() => {
@@ -90,6 +89,11 @@ const SupportPage = () => {
       console.error('Error formatting date:', err);
       return 'Invalid date';
     }
+  };
+  
+  // Handle ticket click to navigate to all tickets page with selected ticket ID
+  const handleTicketClick = (ticketId) => {
+    navigate('/support/tickets', { state: { selectedTicketId: ticketId } });
   };
   
   // Determine if the user is logged in
@@ -163,35 +167,34 @@ const SupportPage = () => {
                     key={ticket.id}
                     className="bg-gray-900 border-gray-800 ticket-card" 
                     hoverable
+                    onClick={() => handleTicketClick(ticket.id)}
                   >
-                    <Link to={`/support/ticket/${ticket.id}`} className="block h-full">
-                      <div className="flex flex-col h-full">
-                        <div className="mb-3 flex-grow">
-                          <div className="flex items-center mb-2">
-                            <FileTextOutlined className="text-green-500 mr-2" />
-                            <Text className="text-white ticket-subject truncate" style={{ maxWidth: '90%' }}>
-                              {ticket.subject || 'No Subject'}
-                            </Text>
-                          </div>
-                          <div className="ticket-meta">
-                            <Text className="ticket-number block mb-1">
-                              Ticket #{ticket.ticketNumber || 'Unknown'}
-                            </Text>
-                            <Text className="ticket-date block text-gray-400 text-sm">
-                              {formatDate(ticket.createdAt)}
-                            </Text>
-                          </div>
+                    <div className="flex flex-col h-full">
+                      <div className="mb-3 flex-grow">
+                        <div className="flex items-center mb-2">
+                          <FileTextOutlined className="text-green-500 mr-2" />
+                          <span className="text-white ticket-subject truncate" style={{ maxWidth: '90%' }}>
+                            {ticket.subject || 'No Subject'}
+                          </span>
                         </div>
-                        <div className="mt-2">
-                          <Tag 
-                            color={getStatusColor(ticket.status)} 
-                            className="ticket-status"
-                          >
-                            {ticket.status || 'Unknown'}
-                          </Tag>
+                        <div className="ticket-meta">
+                          <span className="ticket-number block mb-1">
+                            Ticket #{ticket.ticketNumber || 'Unknown'}
+                          </span>
+                          <span className="ticket-date block text-gray-400 text-sm">
+                            {formatDate(ticket.createdAt)}
+                          </span>
                         </div>
                       </div>
-                    </Link>
+                      <div className="mt-2">
+                        <Tag 
+                          color={getStatusColor(ticket.status)} 
+                          className="ticket-status"
+                        >
+                          {ticket.status || 'Unknown'}
+                        </Tag>
+                      </div>
+                    </div>
                   </Card>
                 ))}
                 
@@ -202,7 +205,7 @@ const SupportPage = () => {
                 >
                   <Link to="/support/tickets" className="w-full h-full flex flex-col items-center justify-center p-6">
                     <RightOutlined className="text-green-500 text-3xl mb-3" />
-                    <Text className="text-white text-lg">View All Tickets</Text>
+                    <span className="text-white text-lg">View All Tickets</span>
                   </Link>
                 </Card>
               </div>

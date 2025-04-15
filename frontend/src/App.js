@@ -24,6 +24,7 @@ import UnauthorizedPage from './pages/UnauthorizedPage';
 // Support Pages
 import SupportPage from './pages/support/SupportPage';
 import NewTicketPage from './pages/support/NewTicketPage';
+import TicketsPage from './pages/support/TicketsPage';
 
 // Auth context
 import { AuthProvider } from './context/AuthContext';
@@ -35,7 +36,7 @@ import AppLayout from './layouts/AppLayout';
 import './style/Global.css'; 
 import './style/Navigation.css';
 
-// Add this custom CSS for fixing Ant Design styling issues
+// Custom CSS for fixing Ant Design styling issues
 const customStyles = `
   .ant-drawer-body {
     padding: 0;
@@ -141,25 +142,22 @@ const App = () => {
                 {/* Restricted to logged-in users (any role) */}
                 <Route element={<PrivateRoute roles={['user', 'premium', 'admin', 'moderator']} />}>
                   <Route path="account" element={<AccountPage />} />
-                  {/* Add more user routes here */}
+                  <Route path="support/tickets" element={<TicketsPage />} />
                 </Route>
                 
                 {/* Restricted to premium users */}
                 <Route element={<PrivateRoute roles={['premium', 'admin']} />}>
                   <Route path="premium" element={<div>Premium Content</div>} />
-                  {/* Add more premium routes here */}
                 </Route>
                 
                 {/* Restricted to admin users */}
                 <Route element={<PrivateRoute roles={['admin']} />}>
                   <Route path="admin" element={<div>Admin Dashboard</div>} />
-                  {/* Add more admin routes here */}
                 </Route>
                 
                 {/* Restricted to moderator users */}
                 <Route element={<PrivateRoute roles={['moderator', 'admin']} />}>
                   <Route path="moderate" element={<div>Moderation Dashboard</div>} />
-                  {/* Add more moderator routes here */}
                 </Route>
                 
                 {/* 404 route */}

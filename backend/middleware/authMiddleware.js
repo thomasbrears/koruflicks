@@ -12,9 +12,6 @@ export const authMiddleware = async (req, res, next) => {
       const decodedToken = await admin.auth().verifyIdToken(authToken);
       req.user = decodedToken;
       
-      // Log success for debugging
-      console.log(`Authentication successful for user: ${decodedToken.uid}`);
-      
       next();
     } catch (error) {
       console.error('Error verifying authentication token:', error);
