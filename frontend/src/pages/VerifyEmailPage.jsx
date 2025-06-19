@@ -142,7 +142,13 @@ function VerifyEmailPage() {
                             >Resend Verification Email
                             </Button>
                         </div>,
-                        
+                        <Button 
+                            key="home"
+                            onClick={() => navigate('/')}
+                            className="w-full bg-gray-800 text-white border border-gray-700 font-semibold py-3 h-11 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-300 text-center"
+                            icon={<HomeOutlined />}
+                        >Back to Home
+                        </Button>
                     ]}
                     className="text-white bg-transparent"
                 />

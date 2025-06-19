@@ -1,28 +1,22 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import {
-    signInWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup,
-    sendSignInLinkToEmail,
-} from 'firebase/auth';
-import { auth } from '../firebaseConfig.js';
-import { Link, useNavigate } from 'react-router-dom';
-import { notification, Input, Button, Divider, Form } from 'antd';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { notification, Input, Button, Divider, Form, Checkbox } from 'antd';
 import { MailOutlined, LockOutlined, GoogleOutlined } from '@ant-design/icons';
 import AuthLayout from '../layouts/AuthLayout';
+import { signInWithEmail, signInWithGoogle, sendMagicLink } from '../services/authService';
 
 function SignInPage() {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
     const [form] = Form.useForm();
 
     // Handle email/password sign-in
     const handleEmailPasswordSignIn = async (values) => {
-        const { email, password } = values;
+        const { email, password, rememberMe } = values;
 
         if (!email || !password) {
             notification.error({
@@ -35,18 +29,30 @@ function SignInPage() {
         try {
             setLoading(true);
             setLoadingMessage(`Signing in as ${email}...`);
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            localStorage.setItem('token', user.accessToken);
-            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Use auth service to sign in
+            const user = await signInWithEmail(email, password);
+            
+            // If remember me is checked, store in localStorage, otherwise sessionStorage
+            if (rememberMe) {
+                localStorage.setItem('hasSession', 'true');
+            } else {
+                sessionStorage.setItem('hasSession', 'true');
+            }
             
             notification.success({
                 message: 'Success',
                 description: 'Signed in successfully!',
             });
 
-            navigate('/'); // Redirect to the homepage
+            // Redirect to the previous URL if available, otherwise to home
+            const previousUrl = sessionStorage.getItem('previousUrl');
+            if (previousUrl) {
+                navigate(previousUrl);
+                sessionStorage.removeItem('previousUrl');
+            } else {
+                navigate('/');
+            }
         } catch (error) {
             console.error("Error during sign-in:", error);
             switch (error.code) {
@@ -76,23 +82,26 @@ function SignInPage() {
 
     // Handle Google Sign-In
     const handleGoogleSignIn = async () => {
-        const provider = new GoogleAuthProvider();
-
         try {
             setLoading(true);
             setLoadingMessage('Signing in with Google...');
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-
-            localStorage.setItem('token', user.accessToken);
-            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Use auth service to sign in with Google
+            await signInWithGoogle();
             
             notification.success({
                 message: 'Success',
                 description: 'Signed in successfully with Google!',
             });
 
-            navigate('/'); // Redirect to the homepage
+            // Redirect to the previous URL if available, otherwise to home
+            const previousUrl = sessionStorage.getItem('previousUrl');
+            if (previousUrl) {
+                navigate(previousUrl);
+                sessionStorage.removeItem('previousUrl');
+            } else {
+                navigate('/');
+            }
         } catch (error) {
             console.error("Error with Google sign-in:", error);
             notification.error({
@@ -106,7 +115,11 @@ function SignInPage() {
 
     // Handle passwordless sign-in via email link
     const handlePasswordlessSignIn = async () => {
-        if (!email) {
+        // Get email from form
+        const formEmail = form.getFieldValue('email');
+        const emailToUse = formEmail || email;
+        
+        if (!emailToUse) {
             notification.error({
                 message: 'Error',
                 description: 'Please enter your email.',
@@ -114,17 +127,13 @@ function SignInPage() {
             return;
         }
 
-        const actionCodeSettings = {
-            url: 'http://localhost:3000/auth/magic-link-signin',
-            handleCodeInApp: true,
-        };
-
         try {
             setLoading(true);
-            setLoadingMessage(`Sending sign-in link to ${email}...`);
+            setLoadingMessage(`Sending sign-in link to ${emailToUse}...`);
 
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem('emailForSignIn', email);
+            // Use auth service to send magic link
+            const redirectUrl = window.location.origin + '/auth/magic-link-signin';
+            await sendMagicLink(emailToUse, redirectUrl);
             
             notification.success({
                 message: 'Success',
@@ -159,6 +168,7 @@ function SignInPage() {
                     onFinish={handleEmailPasswordSignIn}
                     layout="vertical"
                     className="space-y-4"
+                    initialValues={{ rememberMe: true }}
                 >
                     <Form.Item
                         name="email"
@@ -191,8 +201,17 @@ function SignInPage() {
                         />
                     </Form.Item>
 
-                    {/* Forgot password link */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-between">
+                        <Form.Item
+                            name="rememberMe"
+                            valuePropName="checked"
+                            noStyle
+                        >
+                            <Checkbox className="text-gray-300">
+                                Remember me
+                            </Checkbox>
+                        </Form.Item>
+                        
                         <Link
                             to="/auth/reset-password"
                             className="text-sm text-LGreen hover:text-white transition-colors duration-200"

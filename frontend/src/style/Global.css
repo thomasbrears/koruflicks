@@ -105,7 +105,6 @@ button {
   fill: #333 !important;
 }
 
-
 .ant-notification-notice {
   background-color: #1f1f1f !important;
   border: 1px solid #303030 !important;
@@ -130,4 +129,290 @@ button {
 }
 .ant-message-info .anticon {
   color: #1890ff !important;
+}
+
+.ant-btn-primary.bg-LGreen:hover {
+  background-color: #328B31 !important;
+  border-color: #328B31 !important;
+}
+
+/* Dark mode form inputs - fixes white background issue */
+.dark-input {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: white !important;
+}
+
+.dark-input::placeholder {
+  color: #9CA3AF !important;
+}
+
+.dark-input:hover, .dark-input:focus {
+  background-color: #1F2937 !important;
+  border-color: #4B5563 !important;
+  color: white !important;
+}
+
+.dark-textarea {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: white !important;
+}
+
+.dark-textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+.dark-textarea:hover, .dark-textarea:focus {
+  background-color: #1F2937 !important;
+  border-color: #4B5563 !important;
+  color: white !important;
+}
+
+/* Select component dark mode styling */
+.dark-select .ant-select-selector {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: white !important;
+}
+
+.dark-select .ant-select-selection-placeholder {
+  color: #9CA3AF !important;
+}
+
+.dark-select .ant-select-arrow {
+  color: #9CA3AF !important;
+}
+
+.dark-select-dropdown {
+  background-color: #1F2937 !important;
+  color: white !important;
+}
+
+/* Override Ant Design dropdown styles for dark mode */
+.ant-select-dropdown {
+  background-color: #1F2937 !important;
+  color: white !important;
+  border: 1px solid #374151 !important;
+}
+
+.ant-select-item {
+  color: #D1D5DB !important;
+}
+
+.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #374151 !important;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #4B5563 !important;
+  color: white !important;
+}
+
+/* Make sure inputs remain dark mode when active/focused */
+.ant-input, 
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker,
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: white !important;
+}
+
+.ant-input:focus, 
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-number-focused,
+.ant-picker-focused,
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: #1F2937 !important;
+  border-color: #4B5563 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.ant-input::placeholder,
+.ant-input-number-placeholder,
+.ant-picker-input > input::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Override Modal styles for dark mode */
+.ant-modal-content {
+  background-color: #1F2937 !important;
+  color: white !important;
+}
+
+.ant-modal-header {
+  background-color: #1F2937 !important;
+  border-bottom: 1px solid #374151 !important;
+}
+
+.ant-modal-title {
+  color: white !important;
+}
+
+.ant-modal-close-icon {
+  color: #D1D5DB !important;
+}
+
+/* Form validation errors */
+.ant-form-item-explain-error {
+  color: #F87171 !important;
+}
+
+/* Upload component styling */
+.ant-upload-list {
+  color: #D1D5DB !important;
+}
+
+.ant-upload-list-item {
+  border: 1px solid #374151 !important;
+}
+
+.ant-upload-list-item-name {
+  color: #D1D5DB !important;
+}
+
+.ant-upload-list-item-card-actions-btn {
+  color: #D1D5DB !important;
+}
+
+/* Alert styling */
+.ant-alert-error {
+  background-color: rgba(248, 113, 113, 0.1) !important;
+  border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}
+
+.ant-alert-error .ant-alert-message {
+  color: #F87171 !important;
+}
+
+.ant-alert-error .ant-alert-description {
+  color: #D1D5DB !important;
+}
+
+/* Button styling in dark mode */
+.ant-btn {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: white !important;
+}
+
+.ant-btn:hover, .ant-btn:focus {
+  background-color: #374151 !important;
+  border-color: #4B5563 !important;
+  color: white !important;
+}
+
+.ant-btn-primary {
+  background-color: #3B82F6 !important;
+  border-color: #3B82F6 !important;
+  color: white !important;
+}
+
+.ant-btn-primary:hover, .ant-btn-primary:focus {
+  background-color: #2563EB !important;
+  border-color: #2563EB !important;
+}
+
+/* Green buttons */
+.bg-green-500 {
+  background-color: #10B981 !important;
+  border-color: #10B981 !important;
+  color: white !important;
+}
+
+.bg-green-500:hover, .hover\:bg-green-600:hover {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+}
+
+/* File upload button */
+.ant-upload.ant-upload-select {
+  color: white !important;
+}
+
+.ant-upload-text {
+  color: #D1D5DB !important;
+}
+
+/* Fix for disabled inputs */
+.ant-input[disabled],
+.ant-input-number-disabled,
+.ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background-color: #374151 !important;
+  color: #9CA3AF !important;
+}
+
+/* Success modal specific styles */
+.success-modal .ant-modal-body {
+  background-color: #1F2937 !important;
+  color: white !important;
+}
+
+.ant-spin-dot-item {
+  background-color: #10B981 !important;
+}
+
+/* Support form specific styles */
+.support-form .ant-form-item-label > label {
+  color: #D1D5DB !important;
+}
+
+/* Additional dropdown select fixes */
+.ant-select-dropdown {
+  background-color: #1F2937 !important;
+}
+
+.ant-select-dropdown .ant-select-item {
+  color: #D1D5DB !important;
+}
+
+.ant-select-dropdown .ant-select-item:hover {
+  background-color: #374151 !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-selected {
+  background-color: #4B5563 !important;
+}
+
+/* Fix for inline errors */
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error .ant-input-affix-wrapper:hover {
+  background-color: #1F2937 !important;
+  border-color: #F87171 !important;
+}
+
+.ant-form-item-has-error .ant-select:not(.ant-select-disabled):not(.ant-select-customize-input) .ant-select-selector {
+  background-color: #1F2937 !important;
+  border-color: #F87171 !important;
+}
+
+.ant-form-item-has-error .ant-input-number,
+.ant-form-item-has-error .ant-picker {
+  background-color: #1F2937 !important;
+  border-color: #F87171 !important;
+}
+
+/* Fix badge styling if used */
+.ant-badge-count {
+  background: #F87171 !important;
+}
+
+/* Divider styling */
+.ant-divider {
+  border-top-color: #374151 !important;
+}
+
+.ant-divider-horizontal.ant-divider-with-text::before,
+.ant-divider-horizontal.ant-divider-with-text::after {
+  border-top-color: #374151 !important;
+}
+
+.ant-divider-inner-text {
+  color: #D1D5DB !important;
 }

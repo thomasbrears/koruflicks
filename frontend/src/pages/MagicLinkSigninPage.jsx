@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, notification, Result } from 'antd';
 import { MailOutlined, HomeOutlined } from '@ant-design/icons';
 import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
+import { setDoc, doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 import AuthLayout from '../layouts/AuthLayout';
-import Loading from '../components/Loading';
 
 function MagicLinkSigninPage() {
     const [email, setEmail] = useState('');
@@ -17,6 +18,48 @@ function MagicLinkSigninPage() {
     const auth = getAuth();
     const [form] = Form.useForm();
 
+    // Function to update user's last login and ensure they have roles array
+    const updateUserRecord = async (userId) => {
+        try {
+            const userDocRef = doc(db, 'users', userId);
+            
+            // Check if user document exists
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                // Create update data object with lastLogin timestamp
+                const updateData = {
+                    lastLogin: serverTimestamp()
+                };
+                
+                // If user doesn't have roles array, add it with default 'user' role
+                if (!userData.roles || !Array.isArray(userData.roles)) {
+                    updateData.roles = ['user'];
+                }
+                
+                // Update the user document
+                await updateDoc(userDocRef, updateData);
+            } else {
+                // Create new user document if it doesn't exist (for users created via email link)
+                const user = auth.currentUser;
+                const displayName = user.displayName || '';
+                const [firstName = '', lastName = ''] = displayName.split(' ');
+                
+                await setDoc(userDocRef, {
+                    email: user.email,
+                    firstName,
+                    lastName,
+                    roles: ['user'],
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp()
+                });
+            }
+        } catch (error) {
+            console.error("Error updating user record:", error);
+        }
+    };
+
     // Function to handle sign-in with email link
     const handleSignIn = async (email) => {
         setLoading(true);
@@ -25,10 +68,11 @@ function MagicLinkSigninPage() {
             const result = await signInWithEmailLink(auth, email, window.location.href);
             const user = result.user;
 
-            window.localStorage.removeItem('emailForSignIn');
-            localStorage.setItem('token', result.user.accessToken);
-            localStorage.setItem('user', JSON.stringify(result.user));
+            // Update user record in Firestore
+            await updateUserRecord(user.uid);
 
+            window.localStorage.removeItem('emailForSignIn');
+            
             if (!hasNotified) {
                 notification.success({
                     message: 'Success',

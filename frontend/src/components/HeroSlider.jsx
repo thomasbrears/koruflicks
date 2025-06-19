@@ -425,7 +425,7 @@ const HeroSlider = ({
                 
                 {/* Truncated description */}
                 <p className="text-white/90 text-sm sm:text-base mb-6">
-                  {item.overview ? truncateText(item.overview, 200) : "No description available."}
+                  {item.overview ? truncateText(item.overview, 200) : " "}
                 </p>
 
                 {/* Buttons Container */}

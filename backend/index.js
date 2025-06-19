@@ -1,14 +1,37 @@
 import express from "express";
 import cors from "cors";
-import movieRoutes from "./routes/movieRoutes.js"; // Import movie routes
+import TicketRoutes from "./routes/TicketRoutes.js";
 
 const app = express();
 
-// dynamic cors options
+// dynamic cors (v2.1)
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://koruflicks.vercel.app' 
-    : true,  // Allow all origins in development
+  origin: (origin, callback) => {
+    // List of allowed origins
+    const allowedOrigins = [
+      'https://dev-koruflicks.vercel.app',
+      'https://koruflicks.vercel.app'
+    ];
+    
+    // Check for thomasbrears-projects pattern matching
+    const isThomaseProject = origin && 
+      (origin.startsWith('https://thomasbrears-projects.vercel.app') || 
+       origin.includes('-thomasbrears-projects.vercel.app'));
+    
+    // In production, check against allowed list or pattern
+    if (process.env.NODE_ENV === 'production') {
+      // Check if origin is allowed or matches Thomasbrears pattern
+      if (!origin || allowedOrigins.includes(origin) || isThomaseProject) {
+        callback(null, true);
+      } else {
+        console.log(`CORS rejected: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    } else {
+      // In development, allow all origins
+      callback(null, true);
+    }
+  },
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
   credentials: true
 };
@@ -18,8 +41,8 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-// Movie Routes
-app.use("/api/movies", movieRoutes);
+// Ticket Routes
+app.use("/api/tickets", TicketRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
