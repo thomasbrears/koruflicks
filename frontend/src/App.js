@@ -20,6 +20,7 @@ import TermsPage from './pages/TermsPage';
 import SeriesPage from './pages/SerriesPage';
 import MoviesPage from './pages/MoviesPage';
 import UnauthorizedPage from './pages/UnauthorizedPage'; 
+import LibraryPage from './pages/LibraryPage';
 
 // Support Pages
 import SupportPage from './pages/support/SupportPage';
@@ -142,6 +143,7 @@ const App = () => {
                 {/* Restricted to logged-in users (any role) */}
                 <Route element={<PrivateRoute roles={['user', 'premium', 'admin', 'moderator']} />}>
                   <Route path="account" element={<AccountPage />} />
+                  <Route path="library" element={<LibraryPage />} />
                   <Route path="support/tickets" element={<TicketsPage />} />
                 </Route>
                 

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import TicketRoutes from "./routes/TicketRoutes.js";
+import UserContentRoutes from "./routes/UserContentRoutes.js";
 
 const app = express();
 
@@ -43,6 +44,9 @@ app.use(express.json());
 
 // Ticket Routes
 app.use("/api/tickets", TicketRoutes);
+
+// User Content Routes
+app.use("/api/user-content", UserContentRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
