@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, List, Empty, Card, Button, Tooltip, message, notification, Spin, Typography } from 'antd';
+import { Tabs, List, Empty, Card, Button, Tooltip, message, notification, Spin, Typography, Pagination } from 'antd';
 import { 
   ClockCircleOutlined, 
   HeartOutlined, 
@@ -20,9 +20,24 @@ const UserContent = ({ user, recentComments = [] }) => {
   const [activeContentTab, setActiveContentTab] = useState('watchlist');
   const [watchlist, setWatchlist] = useState([]);
   const [likedContent, setLikedContent] = useState([]);
+  const [allWatchlist, setAllWatchlist] = useState([]); // Store all watchlist data
+  const [allLikedContent, setAllLikedContent] = useState([]); // Store all liked data
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState({});
   const [stats, setStats] = useState({});
+  
+  // Pagination states
+  const [watchlistPagination, setWatchlistPagination] = useState({
+    current: 1,
+    pageSize: 12,
+    total: 0
+  });
+  const [likedPagination, setLikedPagination] = useState({
+    current: 1,
+    pageSize: 12,
+    total: 0
+  });
+  
   const navigate = useNavigate();
 
   // Load user content on component mount
@@ -33,12 +48,47 @@ const UserContent = ({ user, recentComments = [] }) => {
     }
   }, [user]);
 
+  // Load content when pagination changes
+  useEffect(() => {
+    if (user && activeContentTab === 'watchlist' && allWatchlist.length > 0) {
+      loadWatchlistPage(watchlistPagination.current, watchlistPagination.pageSize);
+    }
+  }, [watchlistPagination.current, watchlistPagination.pageSize, allWatchlist]);
+
+  useEffect(() => {
+    if (user && activeContentTab === 'liked' && allLikedContent.length > 0) {
+      loadLikedPage(likedPagination.current, likedPagination.pageSize);
+    }
+  }, [likedPagination.current, likedPagination.pageSize, allLikedContent]);
+
   const loadUserContent = async () => {
     try {
       setLoading(true);
       const response = await userContentApi.getAllUserContent();
-      setWatchlist(response.watchlist || []);
-      setLikedContent(response.likedContent || []);
+      
+      // Store all data
+      const watchlistData = response.watchlist || [];
+      const likedData = response.likedContent || [];
+      
+      setAllWatchlist(watchlistData);
+      setAllLikedContent(likedData);
+      
+      // Set initial pagination totals
+      setWatchlistPagination(prev => ({
+        ...prev,
+        total: watchlistData.length
+      }));
+      setLikedPagination(prev => ({
+        ...prev,
+        total: likedData.length
+      }));
+      
+      // Load first page of current tab
+      if (activeContentTab === 'watchlist') {
+        loadWatchlistPage(1, watchlistPagination.pageSize);
+      } else if (activeContentTab === 'liked') {
+        loadLikedPage(1, likedPagination.pageSize);
+      }
     } catch (error) {
       console.error('Error loading user content:', error);
       notification.error({
@@ -47,6 +97,50 @@ const UserContent = ({ user, recentComments = [] }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWatchlistPage = async (page, pageSize) => {
+    try {
+      // Calculate pagination from stored data
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedData = allWatchlist.slice(startIndex, endIndex);
+      
+      setWatchlist(paginatedData);
+      setWatchlistPagination(prev => ({
+        ...prev,
+        current: page,
+        total: allWatchlist.length
+      }));
+    } catch (error) {
+      console.error('Error loading watchlist:', error);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to load watchlist. Please try again.',
+      });
+    }
+  };
+
+  const loadLikedPage = async (page, pageSize) => {
+    try {
+      // Calculate pagination from stored data
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedData = allLikedContent.slice(startIndex, endIndex);
+      
+      setLikedContent(paginatedData);
+      setLikedPagination(prev => ({
+        ...prev,
+        current: page,
+        total: allLikedContent.length
+      }));
+    } catch (error) {
+      console.error('Error loading liked content:', error);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to load liked content. Please try again.',
+      });
     }
   };
 
@@ -59,15 +153,64 @@ const UserContent = ({ user, recentComments = [] }) => {
     }
   };
 
+  const handleTabChange = (key) => {
+    setActiveContentTab(key);
+    
+    // Load content for the selected tab
+    if (key === 'watchlist' && allWatchlist.length > 0) {
+      loadWatchlistPage(watchlistPagination.current, watchlistPagination.pageSize);
+    } else if (key === 'liked' && allLikedContent.length > 0) {
+      loadLikedPage(likedPagination.current, likedPagination.pageSize);
+    }
+  };
+
+  const handleWatchlistPageChange = (page, pageSize) => {
+    setWatchlistPagination(prev => ({
+      ...prev,
+      current: page,
+      pageSize: pageSize || prev.pageSize
+    }));
+  };
+
+  const handleLikedPageChange = (page, pageSize) => {
+    setLikedPagination(prev => ({
+      ...prev,
+      current: page,
+      pageSize: pageSize || prev.pageSize
+    }));
+  };
+
   const handleRemoveFromWatchlist = async (item) => {
     const itemId = item.itemId;
     setRemoving(prev => ({ ...prev, [`watchlist_${itemId}`]: true }));
 
     try {
       await watchlistApi.removeFromWatchlist(itemId);
+      
+      // Update all data
+      const updatedWatchlist = allWatchlist.filter(w => w.itemId !== itemId);
+      setAllWatchlist(updatedWatchlist);
+      
+      // Update current page data
       setWatchlist(prev => prev.filter(w => w.itemId !== itemId));
+      
+      // Update pagination total
+      setWatchlistPagination(prev => ({
+        ...prev,
+        total: updatedWatchlist.length
+      }));
+      
       message.success(`Removed "${item.title}" from your watchlist`);
       loadUserStats(); // Refresh stats
+      
+      // If current page is empty and not the first page, go to previous page
+      const itemsOnCurrentPage = watchlist.filter(w => w.itemId !== itemId).length;
+      if (itemsOnCurrentPage === 0 && watchlistPagination.current > 1) {
+        setWatchlistPagination(prev => ({
+          ...prev,
+          current: prev.current - 1
+        }));
+      }
     } catch (error) {
       console.error('Error removing from watchlist:', error);
       notification.error({
@@ -85,9 +228,31 @@ const UserContent = ({ user, recentComments = [] }) => {
 
     try {
       await likedContentApi.removeFromLiked(itemId);
+      
+      // Update all data
+      const updatedLiked = allLikedContent.filter(l => l.itemId !== itemId);
+      setAllLikedContent(updatedLiked);
+      
+      // Update current page data
       setLikedContent(prev => prev.filter(l => l.itemId !== itemId));
+      
+      // Update pagination total
+      setLikedPagination(prev => ({
+        ...prev,
+        total: updatedLiked.length
+      }));
+      
       message.success(`Removed "${item.title}" from your liked content`);
       loadUserStats(); // Refresh stats
+      
+      // If current page is empty and not the first page, go to previous page
+      const itemsOnCurrentPage = likedContent.filter(l => l.itemId !== itemId).length;
+      if (itemsOnCurrentPage === 0 && likedPagination.current > 1) {
+        setLikedPagination(prev => ({
+          ...prev,
+          current: prev.current - 1
+        }));
+      }
     } catch (error) {
       console.error('Error removing from liked content:', error);
       notification.error({
@@ -287,6 +452,63 @@ const UserContent = ({ user, recentComments = [] }) => {
     );
   };
 
+  const renderPaginatedContent = (data, pagination, onPageChange, type) => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize + 1;
+    const endIndex = Math.min(pagination.current * pagination.pageSize, pagination.total);
+    
+    return (
+      <div>
+        {pagination.total > 0 && (
+          <div className="mb-4 flex justify-between items-center">
+            <div className="text-gray-400 text-sm">
+              Showing {startIndex}-{endIndex} of {pagination.total} items
+            </div>
+            <div className="text-gray-400 text-sm">
+              {stats[type] && `${stats[type].movies} movies • ${stats[type].tvShows} TV shows`}
+            </div>
+          </div>
+        )}
+        
+        <List
+          grid={{ 
+            gutter: [20, 20], 
+            xs: 1, 
+            sm: 2, 
+            md: 3, 
+            lg: 3, 
+            xl: 4, 
+            xxl: 4
+          }}
+          dataSource={data}
+          renderItem={item => (
+            <List.Item>
+              {renderContentCard(item, type)}
+            </List.Item>
+          )}
+        />
+        
+        {pagination.total > pagination.pageSize && (
+          <div className="flex justify-center mt-8">
+            <Pagination
+              current={pagination.current}
+              total={pagination.total}
+              pageSize={pagination.pageSize}
+              onChange={onPageChange}
+              onShowSizeChange={onPageChange}
+              showSizeChanger
+              showQuickJumper
+              showTotal={(total, range) => 
+                `${range[0]}-${range[1]} of ${total} items`
+              }
+              pageSizeOptions={['12', '24', '48', '96']}
+              className="pagination-dark"
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const tabItems = [
     {
       key: 'watchlist',
@@ -307,30 +529,7 @@ const UserContent = ({ user, recentComments = [] }) => {
               <Spin size="large" />
             </div>
           ) : watchlist.length > 0 ? (
-            <>
-              {stats.watchlist && (
-                <div className="mb-4 text-gray-400 text-sm">
-                  {stats.watchlist.total} items • {stats.watchlist.movies} movies • {stats.watchlist.tvShows} TV shows
-                </div>
-              )}
-              <List
-                grid={{ 
-                  gutter: [20, 20], 
-                  xs: 1, 
-                  sm: 2, 
-                  md: 3, 
-                  lg: 3, 
-                  xl: 4, 
-                  xxl: 4
-                }}
-                dataSource={watchlist}
-                renderItem={item => (
-                  <List.Item>
-                    {renderContentCard(item, 'watchlist')}
-                  </List.Item>
-                )}
-              />
-            </>
+            renderPaginatedContent(watchlist, watchlistPagination, handleWatchlistPageChange, 'watchlist')
           ) : (
             <Empty 
               description={<span className="text-gray-400">Your watchlist is empty</span>}
@@ -360,30 +559,7 @@ const UserContent = ({ user, recentComments = [] }) => {
               <Spin size="large" />
             </div>
           ) : likedContent.length > 0 ? (
-            <>
-              {stats.liked && (
-                <div className="mb-4 text-gray-400 text-sm">
-                  {stats.liked.total} items • {stats.liked.movies} movies • {stats.liked.tvShows} TV shows
-                </div>
-              )}
-              <List
-                grid={{ 
-                  gutter: [20, 20], 
-                  xs: 1, 
-                  sm: 2, 
-                  md: 3, 
-                  lg: 3, 
-                  xl: 4, 
-                  xxl: 4 
-                }}
-                dataSource={likedContent}
-                renderItem={item => (
-                  <List.Item>
-                    {renderContentCard(item, 'liked')}
-                  </List.Item>
-                )}
-              />
-            </>
+            renderPaginatedContent(likedContent, likedPagination, handleLikedPageChange, 'liked')
           ) : (
             <Empty 
               description={<span className="text-gray-400">You haven't liked any content yet</span>}
@@ -434,7 +610,7 @@ const UserContent = ({ user, recentComments = [] }) => {
       </div>
       <Tabs 
         activeKey={activeContentTab} 
-        onChange={setActiveContentTab}
+        onChange={handleTabChange}
         className="text-white custom-tabs"
         items={tabItems}
       />
