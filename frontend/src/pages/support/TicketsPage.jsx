@@ -306,7 +306,7 @@ const TicketsPage = () => {
                   <Button 
                     type="primary" 
                     icon={<PlusOutlined />} 
-                    className="bg-green-500 hover:bg-green-600 border-0"
+                    className=" border-0"
                   >
                     Create New Ticket
                   </Button>
@@ -364,7 +364,7 @@ const TicketsPage = () => {
                         setLoading(false);
                       });
                   }}
-                  className="bg-green-500 hover:bg-green-600 border-0"
+                  className="border-0"
                 >
                   Try Again
                 </Button>

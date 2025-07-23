@@ -439,7 +439,7 @@ const NewTicketPage = () => {
                     htmlType="submit" 
                     loading={submitting}
                     icon={<SendOutlined />}
-                    className="bg-green-500 hover:bg-green-600 border-0 min-w-[200px]"
+                    className=" border-0 min-w-[200px]"
                     size="large"
                   >
                     Submit Ticket
@@ -464,7 +464,7 @@ const NewTicketPage = () => {
               setSuccessModalVisible(false);
               navigate('/support/tickets');
             }}
-            className="bg-green-500 hover:bg-green-600 border-0 mr-2"
+            className=" border-0 mr-2"
           >
             View My Tickets
           </Button>,

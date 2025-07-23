@@ -153,7 +153,7 @@ const SupportPage = () => {
                   <span className="text-gray-400">{ticketsError}</span>
                   <Button 
                     type="primary" 
-                    className="mt-4 bg-green-500 hover:bg-green-600 border-0"
+                    className="mt-4 border-0"
                     onClick={() => window.location.reload()}
                   >
                     Retry
@@ -223,7 +223,7 @@ const SupportPage = () => {
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                   >
                     <Link to="/support/ticket/new">
-                      <Button type="primary" className="bg-green-500 hover:bg-green-600 border-0">
+                      <Button type="primary" className=" border-0">
                         Create Your First Ticket
                       </Button>
                     </Link>
@@ -246,7 +246,7 @@ const SupportPage = () => {
                 Need help with a specific issue? Submit a ticket and our support team will get back to you.
               </p>
               <Link to="/support/ticket/new">
-                <Button type="primary" size="large" className="bg-green-500 hover:bg-green-600 border-0">
+                <Button type="primary" size="large" className=" border-0">
                   Create New Ticket
                 </Button>
               </Link>
@@ -317,7 +317,7 @@ const SupportPage = () => {
           
           <div className="text-center mt-8">
             <Link to="/support/ticket/new">
-              <Button type="primary" size="large" className="bg-green-500 hover:bg-green-600 border-0">
+              <Button type="primary" size="large" className=" border-0">
                 Need more help? Contact Us
               </Button>
             </Link>
