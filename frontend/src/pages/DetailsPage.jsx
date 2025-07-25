@@ -1,11 +1,15 @@
 // Main page with the movies/shows details and the player. 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Typography, Empty, Spin, Tag, Button } from 'antd';
-import { LoadingOutlined, InfoCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Typography, Empty, Spin, Tag, Button, notification, message, Tooltip } from 'antd';
+import { LoadingOutlined, InfoCircleOutlined, PlayCircleOutlined, CheckCircleFilled, InfoCircleFilled } from '@ant-design/icons';
+import { FaHeart, FaPlus, FaCheck } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { fetchFromAPI } from '../utils/api';
 import { getCountryName } from '../utils/helpers';
+import { auth } from '../firebaseConfig';
+import { addToWatchlist, removeFromWatchlist, addToLiked, removeFromLiked, checkInWatchlist, checkIsLiked } from '../api/userContentApi';
 
 // Details components
 import BackButton from '../components/details/BackButton';
@@ -39,6 +43,204 @@ const DetailsPage = () => {
   const [watchProviders, setWatchProviders] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState('US');
   const [availableCountries, setAvailableCountries] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [inWatchlist, setInWatchlist] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [buttonLoading, setButtonLoading] = useState({});
+
+  // Configure notification placement
+  notification.config({
+    placement: 'topRight',
+    duration: 3,
+  });
+
+  // Effect to manage authentication state
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // Effect to load watchlist and liked status when details are loaded
+  useEffect(() => {
+    if (isLoggedIn && details && id) {
+      loadItemStatus();
+    } else if (!isLoggedIn) {
+      // Clear status when user logs out
+      setInWatchlist(false);
+      setIsLiked(false);
+    }
+  }, [isLoggedIn, details, id]);
+
+  const loadItemStatus = async () => {
+    if (!isLoggedIn || !id) {
+      return;
+    }
+
+    try {
+      const [watchlistStatus, likedStatus] = await Promise.all([
+        checkInWatchlist(id),
+        checkIsLiked(id)
+      ]);
+      
+      setInWatchlist(watchlistStatus);
+      setIsLiked(likedStatus);
+    } catch (error) {
+      console.error('Error loading item status:', error);
+    }
+  };
+
+  // Function for watchlist button press
+  const handleWatchlistToggle = async () => {
+    if (!isLoggedIn) {
+      notification.info({
+        message: 'Authentication Required',
+        description: 'You need to log in to use this feature.',
+        icon: <InfoCircleFilled style={{ color: '#1890ff' }} />,
+        className: 'custom-notification-info',
+      });
+      return;
+    }
+
+    if (!details) return;
+
+    setButtonLoading(prev => ({ ...prev, watchlist: true }));
+    
+    try {
+      if (inWatchlist) {
+        // Remove from watchlist
+        const result = await removeFromWatchlist(id);
+        if (result) {
+          setInWatchlist(false);
+          message.success({
+            content: `Removed "${details.title || details.name}" from your watchlist`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+        }
+      } else {
+        // Add to watchlist
+        const item = {
+          id: details.id,
+          title: details.title,
+          name: details.name,
+          media_type: mediaType === 'tv' ? 'tv' : 'movie',
+          poster_path: details.poster_path,
+          backdrop_path: details.backdrop_path,
+          overview: details.overview,
+          vote_average: details.vote_average,
+          release_date: details.release_date,
+          first_air_date: details.first_air_date
+        };
+
+        const result = await addToWatchlist(item);
+        if (result) {
+          setInWatchlist(true);
+          notification.success({
+            message: 'Added to Watch Later',
+            description: `"${details.title || details.name}" has been added to your Watch Later list.`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />,
+            className: 'custom-notification-success',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling watchlist:', error);
+      
+      // Handle specific conflict errors
+      if (error.message.includes('already in watchlist') || error.message.includes('already exists')) {
+        setInWatchlist(true);
+        message.info('Item is already in your watchlist');
+      } else if (error.message.includes('not found')) {
+        setInWatchlist(false);
+        message.info('Item was not in your watchlist');
+      } else {
+        notification.error({
+          message: 'Error',
+          description: error.message || 'Failed to update watchlist',
+          className: 'custom-notification-error',
+        });
+      }
+    } finally {
+      setButtonLoading(prev => ({ ...prev, watchlist: false }));
+    }
+  };
+
+  // Function for like button press
+  const handleLikeToggle = async () => {
+    if (!isLoggedIn) {
+      notification.info({
+        message: 'Authentication Required',
+        description: 'You need to log in to use this feature.',
+        icon: <InfoCircleFilled style={{ color: '#1890ff' }} />,
+        className: 'custom-notification-info',
+      });
+      return;
+    }
+
+    if (!details) return;
+
+    setButtonLoading(prev => ({ ...prev, like: true }));
+
+    try {
+      if (isLiked) {
+        // Remove from liked
+        const result = await removeFromLiked(id);
+        if (result) {
+          setIsLiked(false);
+          message.success({
+            content: `Removed "${details.title || details.name}" from your liked content`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+        }
+      } else {
+        // Add to liked
+        const item = {
+          id: details.id,
+          title: details.title,
+          name: details.name,
+          media_type: mediaType === 'tv' ? 'tv' : 'movie',
+          poster_path: details.poster_path,
+          backdrop_path: details.backdrop_path,
+          overview: details.overview,
+          vote_average: details.vote_average,
+          release_date: details.release_date,
+          first_air_date: details.first_air_date
+        };
+
+        const result = await addToLiked(item);
+        if (result) {
+          setIsLiked(true);
+          message.success({
+            content: `Added "${details.title || details.name}" to your favorites`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      
+      // Handle specific conflict errors
+      if (error.message.includes('already in liked content') || error.message.includes('already exists')) {
+        setIsLiked(true);
+        message.info('Item is already in your favorites');
+      } else if (error.message.includes('not found')) {
+        setIsLiked(false);
+        message.info('Item was not in your favorites');
+      } else {
+        notification.error({
+          message: 'Error',
+          description: error.message || 'Failed to update liked content',
+          className: 'custom-notification-error',
+        });
+      }
+    } finally {
+      setButtonLoading(prev => ({ ...prev, like: false }));
+    }
+  };
 
   useEffect(() => {
     if (!mediaType || !id) {
@@ -318,16 +520,80 @@ const DetailsPage = () => {
                 </div>
               )}
 
+              {/* Action Buttons */}
               {!isPlaying && (
-                <Button 
-                  type="primary" 
-                  icon={<PlayCircleOutlined />}
-                  onClick={playTrailer}
-                  size="large"
-                  className="bg-LGreen border-LGreen hover:bg-green-600 hover:border-green-600 mb-6"
-                >
-                  Watch Trailer
-                </Button>
+                <div className="flex items-center gap-3 mb-6">
+                  {/* Watch Trailer Button */}
+                  <Button 
+                    type="primary" 
+                    icon={<PlayCircleOutlined />}
+                    onClick={playTrailer}
+                    size="large"
+                    className="bg-LGreen border-LGreen hover:bg-green-600 hover:border-green-600"
+                  >
+                    Watch Trailer
+                  </Button>
+
+                  {/* Watchlist Button */}
+                  <Tooltip 
+                    title={inWatchlist ? "Remove from Watch Later" : "Add to Watch Later"} 
+                    placement="top" 
+                    color="#000" 
+                    overlayInnerStyle={{ border: '1px solid #328B31' }}
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleWatchlistToggle}
+                      disabled={buttonLoading.watchlist}
+                      className={`${
+                        inWatchlist
+                          ? 'bg-DGreen text-white border-DGreen' 
+                          : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
+                      } px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 border`}
+                    >
+                      {buttonLoading.watchlist ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      ) : inWatchlist ? (
+                        <FaCheck />
+                      ) : (
+                        <FaPlus />
+                      )}
+                      <span className="text-sm">
+                        {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                      </span>
+                    </motion.button>
+                  </Tooltip>
+
+                  {/* Like Button */}
+                  <Tooltip 
+                    title={isLiked ? "Remove from Favorites" : "Add to Favorites"} 
+                    placement="top" 
+                    color="#000" 
+                    overlayInnerStyle={{ border: '1px solid #dc2626' }}
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleLikeToggle}
+                      disabled={buttonLoading.like}
+                      className={`${
+                        isLiked
+                          ? 'bg-red-600 text-white border-red-600' 
+                          : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700'
+                      } px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200 disabled:opacity-50 border`}
+                    >
+                      {buttonLoading.like ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      ) : (
+                        <FaHeart className={isLiked ? 'text-white' : ''} />
+                      )}
+                      <span className="text-sm">
+                        {isLiked ? 'Liked' : 'Like'}
+                      </span>
+                    </motion.button>
+                  </Tooltip>
+                </div>
               )}
 
               {/* External Links */}

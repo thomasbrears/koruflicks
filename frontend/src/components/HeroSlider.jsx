@@ -3,17 +3,17 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { motion } from "framer-motion";
-import { FaPlay, FaHeart, FaPlus, FaInfoCircle, FaFilm, FaTv } from "react-icons/fa";
+import { FaPlay, FaHeart, FaPlus, FaInfoCircle, FaFilm, FaTv, FaCheck } from "react-icons/fa";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebaseConfig";
 import { Tooltip, Tag, notification, message, Skeleton } from "antd";
 import { CheckCircleFilled, InfoCircleFilled } from "@ant-design/icons";
+import { addToWatchlist, removeFromWatchlist, addToLiked, removeFromLiked, checkInWatchlist, checkIsLiked } from "../api/userContentApi";
 
 /**
  * A reusable hero slider component
- * 
- * @param {Object} props Component props
+ * * @param {Object} props Component props
  * @param {Array} props.items Array of movies/shows to display in the slider
  * @param {String} props.pageType Type of page (home, category, etc.)
  * @param {String} props.title Optional title to display in the header banner
@@ -33,6 +33,11 @@ const HeroSlider = ({
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const sliderRef = React.useRef(null);
+  
+  // State for tracking watchlist and liked status
+  const [watchlistStatus, setWatchlistStatus] = useState({});
+  const [likedStatus, setLikedStatus] = useState({});
+  const [buttonLoading, setButtonLoading] = useState({});
 
   // Determine if we should show the skeleton loader
   const shouldShowSkeleton = loading || items.length === 0;
@@ -43,15 +48,67 @@ const HeroSlider = ({
     duration: 3,
   });
 
+  // Effect to manage authentication state
   useEffect(() => {
-    // Set up Firebase authentication listener
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsLoggedIn(!!user);
     });
 
     // Clean up listener on component unmount
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribe();
+    };
+  }, []); // Run only once on mount
+
+  // Effect to load watchlist and liked status for all items
+  useEffect(() => {
+    if (isLoggedIn && items.length > 0) {
+      loadItemStatuses();
+    } else if (!isLoggedIn) {
+      // Clear status when user logs out or is not logged in
+      setWatchlistStatus({});
+      setLikedStatus({});
+    }
+  }, [isLoggedIn, items]); // Re-run when isLoggedIn or items change
+
+  const loadItemStatuses = async () => {
+    if (!isLoggedIn || items.length === 0) {
+      console.log("HeroSlider: Skipping loadItemStatuses (not logged in or no items).");
+      return;
+    }
+
+    try {
+      // Create promises for checking each item's status
+      const statusPromises = items.map(async (item) => {
+        try {
+          const [inWatchlist, isLiked] = await Promise.all([
+            checkInWatchlist(item.id),
+            checkIsLiked(item.id)
+          ]);
+          return { itemId: item.id, inWatchlist, isLiked };
+        } catch (error) {
+          console.error(`Error checking status for item ${item.id}:`, error);
+          // Return false for both if there's an error to prevent breaking the Promise.all
+          return { itemId: item.id, inWatchlist: false, isLiked: false };
+        }
+      });
+
+      const statuses = await Promise.all(statusPromises);
+      
+      const watchlistStatusMap = {};
+      const likedStatusMap = {};
+      
+      statuses.forEach(({ itemId, inWatchlist, isLiked }) => {
+        watchlistStatusMap[itemId] = inWatchlist;
+        likedStatusMap[itemId] = isLiked;
+      });
+      
+      setWatchlistStatus(watchlistStatusMap);
+      setLikedStatus(likedStatusMap);
+    } catch (error) {
+      console.error('HeroSlider: Error loading item statuses:', error);
+    }
+  };
 
   // Next arrow component
   const NextArrow = (props) => {
@@ -155,9 +212,8 @@ const HeroSlider = ({
     navigate(path);
   };
 
-  // Function for heart and plus button presses
-  const handleButtonPress = (buttonType, item) => {
-    // if not logged in, show notification and return
+  // Function for watchlist button press
+  const handleWatchlistToggle = async (item) => {
     if (!isLoggedIn) {
       notification.info({
         message: 'Authentication Required',
@@ -168,22 +224,127 @@ const HeroSlider = ({
       return;
     }
 
-    const title = item.title || item.name;
+    const itemId = item.id;
+    const isCurrentlyInWatchlist = watchlistStatus[itemId] || false;
     
-    // Heart/like action
+    setButtonLoading(prev => ({ ...prev, [`watchlist_${itemId}`]: true }));
+    try {
+      if (isCurrentlyInWatchlist) {
+        // Remove from watchlist
+        const result = await removeFromWatchlist(itemId);
+        if (result) {
+          setWatchlistStatus(prev => ({ ...prev, [itemId]: false }));
+          message.success({
+            content: `Removed "${item.title || item.name}" from your watchlist`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+          console.log(`Successfully removed ${itemId} from watchlist.`);
+        }
+      } else {
+        // Add to watchlist
+        const result = await addToWatchlist(item);
+        if (result) {
+          setWatchlistStatus(prev => ({ ...prev, [itemId]: true }));
+          notification.success({
+            message: 'Added to Watch Later',
+            description: `"${item.title || item.name}" has been added to your Watch Later list.`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />,
+            className: 'custom-notification-success',
+          });
+          console.log(`Successfully added ${itemId} to watchlist.`);
+        }
+      }
+    } catch (error) {
+      console.error('HeroSlider: Error toggling watchlist:', error);
+      
+      // Handle specific conflict errors
+      if (error.message.includes('already in watchlist') || error.message.includes('already exists')) {
+        setWatchlistStatus(prev => ({ ...prev, [itemId]: true })); // Ensure status is true if it's already there
+        message.info('Item is already in your watchlist');
+      } else if (error.message.includes('not found')) {
+        setWatchlistStatus(prev => ({ ...prev, [itemId]: false })); // Ensure status is false if it's not found
+        message.info('Item was not in your watchlist');
+      } else {
+        notification.error({
+          message: 'Error',
+          description: error.message || 'Failed to update watchlist',
+          className: 'custom-notification-error',
+        });
+      }
+    } finally {
+      setButtonLoading(prev => ({ ...prev, [`watchlist_${itemId}`]: false }));
+    }
+  };
+
+  // Function for like button press
+  const handleLikeToggle = async (item) => {
+    if (!isLoggedIn) {
+      notification.info({
+        message: 'Authentication Required',
+        description: 'You need to log in to use this feature.',
+        icon: <InfoCircleFilled style={{ color: '#1890ff' }} />,
+        className: 'custom-notification-info',
+      });
+      return;
+    }
+
+    const itemId = item.id;
+    const isCurrentlyLiked = likedStatus[itemId] || false;
+    
+    setButtonLoading(prev => ({ ...prev, [`like_${itemId}`]: true }));
+
+    try {
+      if (isCurrentlyLiked) {
+        // Remove from liked
+        const result = await removeFromLiked(itemId);
+        if (result) {
+          setLikedStatus(prev => ({ ...prev, [itemId]: false }));
+          message.success({
+            content: `Removed "${item.title || item.name}" from your liked content`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+          console.log(`Successfully removed ${itemId} from liked content.`);
+        }
+      } else {
+        // Add to liked
+        const result = await addToLiked(item);
+        if (result) {
+          setLikedStatus(prev => ({ ...prev, [itemId]: true }));
+          message.success({
+            content: `Added "${item.title || item.name}" to your favorites`,
+            icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
+          });
+          console.log(`Successfully added ${itemId} to liked content.`);
+        }
+      }
+    } catch (error) {
+      console.error('HeroSlider: Error toggling like:', error);
+      
+      // Handle specific conflict errors
+      if (error.message.includes('already in liked content') || error.message.includes('already exists')) {
+        setLikedStatus(prev => ({ ...prev, [itemId]: true })); // Ensure status is true if it's already there
+        message.info('Item is already in your favorites');
+      } else if (error.message.includes('not found')) {
+        setLikedStatus(prev => ({ ...prev, [itemId]: false })); // Ensure status is false if it's not found
+        message.info('Item was not in your favorites');
+      } else {
+        notification.error({
+          message: 'Error',
+          description: error.message || 'Failed to update liked content',
+          className: 'custom-notification-error',
+        });
+      }
+    } finally {
+      setButtonLoading(prev => ({ ...prev, [`like_${itemId}`]: false }));
+    }
+  };
+
+  // Function for heart and plus button presses (legacy - keeping for compatibility)
+  const handleButtonPress = (buttonType, item) => {
     if (buttonType === 'heart') {
-      message.success({
-        content: `Added "${title}" to your favorites`,
-        icon: <CheckCircleFilled style={{ color: '#3db63b' }} />
-      });
+      handleLikeToggle(item);
     } else {
-      // watch later action
-      notification.success({
-        message: 'Added to Watch Later',
-        description: `"${title}" has been added to your Watch Later list.`,
-        icon: <CheckCircleFilled style={{ color: '#3db63b' }} />,
-        className: 'custom-notification-success',
-      });
+      handleWatchlistToggle(item);
     }
   };
 
@@ -439,23 +600,53 @@ const HeroSlider = ({
                   </motion.button>
                   
                   <div className="flex gap-2 ml-2">
-                    <Tooltip title="Add to Watch Later" placement="top" color="#000" overlayInnerStyle={{ border: '1px solid #328B31' }}>
+                    <Tooltip 
+                      title={watchlistStatus[item.id] ? "Remove from Watch Later" : "Add to Watch Later"} 
+                      placement="top" 
+                      color="#000" 
+                      overlayInnerStyle={{ border: '1px solid #328B31' }}
+                    >
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        onClick={() => handleButtonPress('plus', item)}
-                        className="bg-gray-800 text-white p-3 rounded-full hover:bg-gray-700 flex-shrink-0"
+                        onClick={() => handleWatchlistToggle(item)}
+                        disabled={buttonLoading[`watchlist_${item.id}`]}
+                        className={`${
+                          watchlistStatus[item.id] === true
+                            ? 'bg-DGreen text-white' 
+                            : 'bg-gray-800 text-white hover:bg-gray-700'
+                        } p-3 rounded-full flex-shrink-0 transition-colors duration-200 disabled:opacity-50`}
                       >
-                        <FaPlus />
+                        {buttonLoading[`watchlist_${item.id}`] ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : watchlistStatus[item.id] === true ? (
+                          <FaCheck />
+                        ) : (
+                          <FaPlus />
+                        )}
                       </motion.button>
                     </Tooltip>
                     
-                    <Tooltip title="Like" placement="top" color="#000" overlayInnerStyle={{ border: '1px solid #328B31' }}>
+                    <Tooltip 
+                      title={likedStatus[item.id] ? "Unlike" : "Like"} 
+                      placement="top" 
+                      color="#000" 
+                      overlayInnerStyle={{ border: '1px solid #328B31' }}
+                    >
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        onClick={() => handleButtonPress('heart', item)}
-                        className="bg-gray-800 text-white p-3 rounded-full hover:bg-gray-700 flex-shrink-0"
+                        onClick={() => handleLikeToggle(item)}
+                        disabled={buttonLoading[`like_${item.id}`]}
+                        className={`${
+                          likedStatus[item.id] === true
+                            ? 'bg-red-600 text-white' 
+                            : 'bg-gray-800 text-white hover:bg-gray-700'
+                        } p-3 rounded-full flex-shrink-0 transition-colors duration-200 disabled:opacity-50`}
                       >
-                        <FaHeart />
+                        {buttonLoading[`like_${item.id}`] ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        ) : (
+                          <FaHeart className={likedStatus[item.id] === true ? 'text-white' : ''} />
+                        )}
                       </motion.button>
                     </Tooltip>
                   </div>
