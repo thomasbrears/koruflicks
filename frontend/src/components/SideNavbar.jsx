@@ -22,7 +22,8 @@ import {
   QuestionCircleOutlined,
   UserOutlined,
   SettingOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  BookOutlined
 } from '@ant-design/icons';
 import useAuth from '../hooks/useAuth';
 
@@ -96,6 +97,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
     if (path === '/') return ['home'];
     if (path.startsWith('/movies')) return ['movies'];
     if (path.startsWith('/series')) return ['series'];
+    if (path.startsWith('/library')) return ['library'];
     if (path.startsWith('/search')) return ['search'];
     if (path.startsWith('/categories')) return ['categories'];
     if (path.startsWith('/support')) return ['support'];
@@ -156,6 +158,11 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
       key: 'series',
       icon: <PlaySquareOutlined />,
       label: <Link to="/series" onClick={isMobile ? onClose : undefined}>Series</Link>,
+    },
+    {
+      key: 'library',
+      icon: <BookOutlined />,
+      label: <Link to="/library" onClick={isMobile ? onClose : undefined}>My Library</Link>,
     },
     {
       key: 'search',
@@ -333,7 +340,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
   const collapsedMenuItems = [...menuItems];
   if (!isExpanded) {
     // Replace search item with special handling for collapsed mode
-    collapsedMenuItems[3] = {
+    collapsedMenuItems[4] = {
       key: 'search',
       icon: <SearchOutlined style={{ color: '#3db636', fontSize: '18px' }} />,
       label: ' ',
@@ -446,7 +453,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
                   style={{ marginRight: 10 }}
                 />
                 <Text style={{ color: 'white' }}>
-                  Kia ora, ${getUserDisplayName(user)}
+                  Kia ora, {getUserDisplayName(user)}
                 </Text>
               </div>
               <List
@@ -455,12 +462,7 @@ const SideNavbar = ({ visible, onClose, isMobile, isTablet, isLargeScreen }) => 
                   {
                     title: 'Profile',
                     icon: <UserOutlined />,
-                    path: '/account/profile'
-                  },
-                  {
-                    title: 'Edit Account',
-                    icon: <SettingOutlined />,
-                    path: '/account/edit'
+                    path: '/account'
                   },
                   {
                     title: 'Sign Out',

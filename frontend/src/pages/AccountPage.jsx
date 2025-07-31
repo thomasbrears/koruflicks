@@ -42,7 +42,7 @@ const AccountPage = () => {
     password: false
   });
   
-  // Placeholder data for content tabs - in a real app, you would fetch this data
+  // Placeholder data for content tabs
   const watchlist = [];
   const likedContent = [];
   const recentComments = [];
@@ -249,16 +249,6 @@ const AccountPage = () => {
                     )}
                   </div>
                 </div>
-              </Card>
-              
-              {/* User Content Component */}
-              <Card className="bg-gray-900 border border-gray-800 mb-8">
-                <UserContent 
-                  user={user}
-                  watchlist={watchlist}
-                  likedContent={likedContent}
-                  recentComments={recentComments}
-                />
               </Card>
               
               {/* Account Settings Component */}

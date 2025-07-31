@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, List, Empty, Card, Button, Tooltip, message, notification, Spin, Typography, Pagination } from 'antd';
+import { 
+  Tabs, 
+  List, 
+  Empty, 
+  Card, 
+  Button, 
+  Tooltip, 
+  message, 
+  notification, 
+  Spin, 
+  Typography, 
+  Pagination,
+  Row,
+  Col,
+  Select,
+  Input,
+  Statistic
+} from 'antd';
 import { 
   ClockCircleOutlined, 
   HeartOutlined, 
@@ -7,7 +24,12 @@ import {
   PlayCircleOutlined,
   DeleteOutlined,
   StarFilled,
-  CalendarOutlined
+  CalendarOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  SortAscendingOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -15,16 +37,26 @@ import { userContentApi, watchlistApi, likedContentApi } from '../../api/userCon
 
 const { Meta } = Card;
 const { Text } = Typography;
+const { Option } = Select;
+const { Search } = Input;
 
 const UserContent = ({ user, recentComments = [] }) => {
   const [activeContentTab, setActiveContentTab] = useState('watchlist');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [watchlist, setWatchlist] = useState([]);
   const [likedContent, setLikedContent] = useState([]);
-  const [allWatchlist, setAllWatchlist] = useState([]); // Store all watchlist data
-  const [allLikedContent, setAllLikedContent] = useState([]); // Store all liked data
+  const [allWatchlist, setAllWatchlist] = useState([]);
+  const [allLikedContent, setAllLikedContent] = useState([]);
+  const [filteredWatchlist, setFilteredWatchlist] = useState([]);
+  const [filteredLikedContent, setFilteredLikedContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState({});
   const [stats, setStats] = useState({});
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('dateAdded'); // 'dateAdded', 'title', 'releaseDate', 'rating'
+  const [filterBy, setFilterBy] = useState('all'); // 'all', 'movie', 'tv'
   
   // Pagination states
   const [watchlistPagination, setWatchlistPagination] = useState({
@@ -48,18 +80,33 @@ const UserContent = ({ user, recentComments = [] }) => {
     }
   }, [user]);
 
-  // Load content when pagination changes
+  // Apply filters and sorting when data or filters change
   useEffect(() => {
-    if (user && activeContentTab === 'watchlist' && allWatchlist.length > 0) {
-      loadWatchlistPage(watchlistPagination.current, watchlistPagination.pageSize);
+    applyFiltersAndSort();
+  }, [allWatchlist, allLikedContent, searchTerm, sortBy, filterBy]);
+
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    if (activeContentTab === 'watchlist') {
+      setWatchlistPagination(prev => ({
+        ...prev,
+        current: 1,
+        total: filteredWatchlist.length
+      }));
+      loadWatchlistPage(1, watchlistPagination.pageSize);
     }
-  }, [watchlistPagination.current, watchlistPagination.pageSize, allWatchlist]);
+  }, [filteredWatchlist]);
 
   useEffect(() => {
-    if (user && activeContentTab === 'liked' && allLikedContent.length > 0) {
-      loadLikedPage(likedPagination.current, likedPagination.pageSize);
+    if (activeContentTab === 'liked') {
+      setLikedPagination(prev => ({
+        ...prev,
+        current: 1,
+        total: filteredLikedContent.length
+      }));
+      loadLikedPage(1, likedPagination.pageSize);
     }
-  }, [likedPagination.current, likedPagination.pageSize, allLikedContent]);
+  }, [filteredLikedContent]);
 
   const loadUserContent = async () => {
     try {
@@ -73,22 +120,6 @@ const UserContent = ({ user, recentComments = [] }) => {
       setAllWatchlist(watchlistData);
       setAllLikedContent(likedData);
       
-      // Set initial pagination totals
-      setWatchlistPagination(prev => ({
-        ...prev,
-        total: watchlistData.length
-      }));
-      setLikedPagination(prev => ({
-        ...prev,
-        total: likedData.length
-      }));
-      
-      // Load first page of current tab
-      if (activeContentTab === 'watchlist') {
-        loadWatchlistPage(1, watchlistPagination.pageSize);
-      } else if (activeContentTab === 'liked') {
-        loadLikedPage(1, likedPagination.pageSize);
-      }
     } catch (error) {
       console.error('Error loading user content:', error);
       notification.error({
@@ -100,48 +131,72 @@ const UserContent = ({ user, recentComments = [] }) => {
     }
   };
 
-  const loadWatchlistPage = async (page, pageSize) => {
-    try {
-      // Calculate pagination from stored data
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedData = allWatchlist.slice(startIndex, endIndex);
-      
-      setWatchlist(paginatedData);
-      setWatchlistPagination(prev => ({
-        ...prev,
-        current: page,
-        total: allWatchlist.length
-      }));
-    } catch (error) {
-      console.error('Error loading watchlist:', error);
-      notification.error({
-        message: 'Error',
-        description: 'Failed to load watchlist. Please try again.',
+  const applyFiltersAndSort = () => {
+    const filterAndSort = (items) => {
+      let filtered = [...items];
+
+      // Apply search filter
+      if (searchTerm) {
+        filtered = filtered.filter(item =>
+          item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      // Apply media type filter
+      if (filterBy !== 'all') {
+        filtered = filtered.filter(item => item.mediaType === filterBy);
+      }
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'title':
+            return a.title.localeCompare(b.title);
+          case 'releaseDate':
+            const dateA = new Date(a.releaseDate || 0);
+            const dateB = new Date(b.releaseDate || 0);
+            return dateB - dateA; // Newest first
+          case 'rating':
+            return (b.voteAverage || 0) - (a.voteAverage || 0); // Highest first
+          case 'dateAdded':
+          default:
+            const addedA = new Date(a.addedAt || 0);
+            const addedB = new Date(b.addedAt || 0);
+            return addedB - addedA; // Most recent first
+        }
       });
-    }
+
+      return filtered;
+    };
+
+    setFilteredWatchlist(filterAndSort(allWatchlist));
+    setFilteredLikedContent(filterAndSort(allLikedContent));
   };
 
-  const loadLikedPage = async (page, pageSize) => {
-    try {
-      // Calculate pagination from stored data
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedData = allLikedContent.slice(startIndex, endIndex);
-      
-      setLikedContent(paginatedData);
-      setLikedPagination(prev => ({
-        ...prev,
-        current: page,
-        total: allLikedContent.length
-      }));
-    } catch (error) {
-      console.error('Error loading liked content:', error);
-      notification.error({
-        message: 'Error',
-        description: 'Failed to load liked content. Please try again.',
-      });
-    }
+  const loadWatchlistPage = (page, pageSize) => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = filteredWatchlist.slice(startIndex, endIndex);
+    
+    setWatchlist(paginatedData);
+    setWatchlistPagination(prev => ({
+      ...prev,
+      current: page,
+      total: filteredWatchlist.length
+    }));
+  };
+
+  const loadLikedPage = (page, pageSize) => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = filteredLikedContent.slice(startIndex, endIndex);
+    
+    setLikedContent(paginatedData);
+    setLikedPagination(prev => ({
+      ...prev,
+      current: page,
+      total: filteredLikedContent.length
+    }));
   };
 
   const loadUserStats = async () => {
@@ -157,9 +212,9 @@ const UserContent = ({ user, recentComments = [] }) => {
     setActiveContentTab(key);
     
     // Load content for the selected tab
-    if (key === 'watchlist' && allWatchlist.length > 0) {
+    if (key === 'watchlist' && filteredWatchlist.length > 0) {
       loadWatchlistPage(watchlistPagination.current, watchlistPagination.pageSize);
-    } else if (key === 'liked' && allLikedContent.length > 0) {
+    } else if (key === 'liked' && filteredLikedContent.length > 0) {
       loadLikedPage(likedPagination.current, likedPagination.pageSize);
     }
   };
@@ -170,6 +225,7 @@ const UserContent = ({ user, recentComments = [] }) => {
       current: page,
       pageSize: pageSize || prev.pageSize
     }));
+    loadWatchlistPage(page, pageSize || watchlistPagination.pageSize);
   };
 
   const handleLikedPageChange = (page, pageSize) => {
@@ -178,6 +234,7 @@ const UserContent = ({ user, recentComments = [] }) => {
       current: page,
       pageSize: pageSize || prev.pageSize
     }));
+    loadLikedPage(page, pageSize || likedPagination.pageSize);
   };
 
   const handleRemoveFromWatchlist = async (item) => {
@@ -191,26 +248,9 @@ const UserContent = ({ user, recentComments = [] }) => {
       const updatedWatchlist = allWatchlist.filter(w => w.itemId !== itemId);
       setAllWatchlist(updatedWatchlist);
       
-      // Update current page data
-      setWatchlist(prev => prev.filter(w => w.itemId !== itemId));
-      
-      // Update pagination total
-      setWatchlistPagination(prev => ({
-        ...prev,
-        total: updatedWatchlist.length
-      }));
-      
       message.success(`Removed "${item.title}" from your watchlist`);
       loadUserStats(); // Refresh stats
       
-      // If current page is empty and not the first page, go to previous page
-      const itemsOnCurrentPage = watchlist.filter(w => w.itemId !== itemId).length;
-      if (itemsOnCurrentPage === 0 && watchlistPagination.current > 1) {
-        setWatchlistPagination(prev => ({
-          ...prev,
-          current: prev.current - 1
-        }));
-      }
     } catch (error) {
       console.error('Error removing from watchlist:', error);
       notification.error({
@@ -233,26 +273,9 @@ const UserContent = ({ user, recentComments = [] }) => {
       const updatedLiked = allLikedContent.filter(l => l.itemId !== itemId);
       setAllLikedContent(updatedLiked);
       
-      // Update current page data
-      setLikedContent(prev => prev.filter(l => l.itemId !== itemId));
-      
-      // Update pagination total
-      setLikedPagination(prev => ({
-        ...prev,
-        total: updatedLiked.length
-      }));
-      
       message.success(`Removed "${item.title}" from your liked content`);
       loadUserStats(); // Refresh stats
       
-      // If current page is empty and not the first page, go to previous page
-      const itemsOnCurrentPage = likedContent.filter(l => l.itemId !== itemId).length;
-      if (itemsOnCurrentPage === 0 && likedPagination.current > 1) {
-        setLikedPagination(prev => ({
-          ...prev,
-          current: prev.current - 1
-        }));
-      }
     } catch (error) {
       console.error('Error removing from liked content:', error);
       notification.error({
@@ -329,7 +352,7 @@ const UserContent = ({ user, recentComments = [] }) => {
     );
   };
 
-  const renderContentCard = (item, type) => {
+  const renderGridCard = (item, type) => {
     const isRemoving = removing[`${type}_${item.itemId}`];
     const releaseYear = item.releaseDate ? getYear(item.releaseDate) : null;
     
@@ -452,6 +475,84 @@ const UserContent = ({ user, recentComments = [] }) => {
     );
   };
 
+  const renderListItem = (item, type) => {
+    const isRemoving = removing[`${type}_${item.itemId}`];
+    const releaseYear = item.releaseDate ? getYear(item.releaseDate) : null;
+    
+    return (
+      <motion.div
+        key={item.id}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.3 }}
+        className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-24 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+            {item.posterPath ? (
+              <img
+                alt={item.title}
+                src={getImageUrl(item.posterPath, 'w154')}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className="hidden w-full h-full bg-gray-700 items-center justify-center">
+              <div className="text-gray-400 text-xs">
+                {item.mediaType === 'movie' ? '🎬' : '📺'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-medium text-base truncate">{item.title}</h3>
+            <div className="flex items-center gap-4 text-gray-400 text-sm mt-1">
+              <span className="capitalize">{item.mediaType}</span>
+              {releaseYear && <span>{releaseYear}</span>}
+              {item.voteAverage > 0 && (
+                <div className="flex items-center gap-1">
+                  <StarFilled className="text-yellow-400 text-xs" />
+                  <span>{formatRating(item.voteAverage)}</span>
+                </div>
+              )}
+              <span>Added {formatDate(item.addedAt)}</span>
+            </div>
+            {item.overview && (
+              <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                {item.overview.length > 120 ? `${item.overview.substring(0, 120)}...` : item.overview}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex gap-2 flex-shrink-0">
+            <Tooltip title="Watch Now">
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                onClick={() => handleWatchNow(item)}
+                className="bg-red-600 border-red-600 hover:bg-red-700"
+              >
+                Watch
+              </Button>
+            </Tooltip>
+            <Tooltip title={`Remove from ${type === 'watchlist' ? 'Watchlist' : 'Liked'}`}>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={isRemoving}
+                onClick={() => type === 'watchlist' ? handleRemoveFromWatchlist(item) : handleRemoveFromLiked(item)}
+              />
+            </Tooltip>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   const renderPaginatedContent = (data, pagination, onPageChange, type) => {
     const startIndex = (pagination.current - 1) * pagination.pageSize + 1;
     const endIndex = Math.min(pagination.current * pagination.pageSize, pagination.total);
@@ -469,23 +570,33 @@ const UserContent = ({ user, recentComments = [] }) => {
           </div>
         )}
         
-        <List
-          grid={{ 
-            gutter: [20, 20], 
-            xs: 1, 
-            sm: 2, 
-            md: 3, 
-            lg: 3, 
-            xl: 4, 
-            xxl: 4
-          }}
-          dataSource={data}
-          renderItem={item => (
-            <List.Item>
-              {renderContentCard(item, type)}
-            </List.Item>
-          )}
-        />
+        {viewMode === 'grid' ? (
+          <List
+            grid={{ 
+              gutter: [20, 20], 
+              xs: 1, 
+              sm: 2, 
+              md: 3, 
+              lg: 3, 
+              xl: 4, 
+              xxl: 4
+            }}
+            dataSource={data}
+            renderItem={item => (
+              <List.Item>
+                {renderGridCard(item, type)}
+              </List.Item>
+            )}
+          />
+        ) : (
+          <div className="space-y-4">
+            {data.map(item => (
+              <div key={item.id}>
+                {renderListItem(item, type)}
+              </div>
+            ))}
+          </div>
+        )}
         
         {pagination.total > pagination.pageSize && (
           <div className="flex justify-center mt-8">
@@ -509,6 +620,67 @@ const UserContent = ({ user, recentComments = [] }) => {
     );
   };
 
+  const renderControls = () => (
+    <div className="mb-6">
+      <Row gutter={[16, 16]} align="middle">
+        <Col xs={24} sm={12} md={8}>
+          <Search
+            placeholder="Search your library..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            allowClear
+            className="custom-search"
+          />
+        </Col>
+        <Col xs={12} sm={6} md={4}>
+          <Select
+            value={filterBy}
+            onChange={setFilterBy}
+            className="w-full"
+            dropdownClassName="bg-gray-800"
+          >
+            <Option value="all">All Types</Option>
+            <Option value="movie">Movies</Option>
+            <Option value="tv">TV Shows</Option>
+          </Select>
+        </Col>
+        <Col xs={12} sm={6} md={4}>
+          <Select
+            value={sortBy}
+            onChange={setSortBy}
+            className="w-full"
+            dropdownClassName="bg-gray-800"
+          >
+            <Option value="dateAdded">Date Added</Option>
+            <Option value="title">Title</Option>
+            <Option value="releaseDate">Release Date</Option>
+            <Option value="rating">Rating</Option>
+          </Select>
+        </Col>
+        <Col xs={24} md={8}>
+          <div className="flex justify-end">
+            <Button.Group>
+              <Button
+                type={viewMode === 'grid' ? 'primary' : 'default'}
+                icon={<AppstoreOutlined />}
+                onClick={() => setViewMode('grid')}
+              >
+                Grid
+              </Button>
+              <Button
+                type={viewMode === 'list' ? 'primary' : 'default'}
+                icon={<UnorderedListOutlined />}
+                onClick={() => setViewMode('list')}
+              >
+                List
+              </Button>
+            </Button.Group>
+          </div>
+        </Col>
+      </Row>
+    </div>
+  );
+
   const tabItems = [
     {
       key: 'watchlist',
@@ -524,6 +696,7 @@ const UserContent = ({ user, recentComments = [] }) => {
       ),
       children: (
         <div>
+          {renderControls()}
           {loading ? (
             <div className="flex justify-center py-12">
               <Spin size="large" />
@@ -532,7 +705,11 @@ const UserContent = ({ user, recentComments = [] }) => {
             renderPaginatedContent(watchlist, watchlistPagination, handleWatchlistPageChange, 'watchlist')
           ) : (
             <Empty 
-              description={<span className="text-gray-400">Your watchlist is empty</span>}
+              description={
+                <span className="text-gray-400">
+                  {searchTerm ? `No items found matching "${searchTerm}"` : 'Your watchlist is empty'}
+                </span>
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               className="my-12"
             />
@@ -554,6 +731,7 @@ const UserContent = ({ user, recentComments = [] }) => {
       ),
       children: (
         <div>
+          {renderControls()}
           {loading ? (
             <div className="flex justify-center py-12">
               <Spin size="large" />
@@ -562,7 +740,11 @@ const UserContent = ({ user, recentComments = [] }) => {
             renderPaginatedContent(likedContent, likedPagination, handleLikedPageChange, 'liked')
           ) : (
             <Empty 
-              description={<span className="text-gray-400">You haven't liked any content yet</span>}
+              description={
+                <span className="text-gray-400">
+                  {searchTerm ? `No items found matching "${searchTerm}"` : "You haven't liked any content yet"}
+                </span>
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               className="my-12"
             />
@@ -600,19 +782,45 @@ const UserContent = ({ user, recentComments = [] }) => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white text-xl font-semibold">My Content</h4>
-        {stats.overall?.totalItems > 0 && (
-          <div className="text-gray-400 text-sm">
-            Total: {stats.overall.totalItems} items
-          </div>
-        )}
-      </div>
+      {/* Stats Cards - only show if we have stats */}
+      {stats.overall && (
+        <Row gutter={16} className="mb-6">
+          <Col xs={24} sm={8}>
+            <Card className="bg-gray-800 border-gray-700">
+              <Statistic
+                title={<span className="text-gray-400">Total Items</span>}
+                value={stats.overall.totalItems}
+                valueStyle={{ color: '#fff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="bg-gray-800 border-gray-700">
+              <Statistic
+                title={<span className="text-gray-400">Movies</span>}
+                value={stats.overall.totalMovies}
+                valueStyle={{ color: '#fff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="bg-gray-800 border-gray-700">
+              <Statistic
+                title={<span className="text-gray-400">TV Shows</span>}
+                value={stats.overall.totalTvShows}
+                valueStyle={{ color: '#fff' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
+
       <Tabs 
         activeKey={activeContentTab} 
         onChange={handleTabChange}
         className="text-white custom-tabs"
         items={tabItems}
+        size="large"
       />
     </div>
   );
